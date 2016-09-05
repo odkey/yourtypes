@@ -1,0 +1,13 @@
+// YourTypes kerning_training/css/style.css
+// Coded by Yota Odaka
+
+div {
+  &.dataset-name {}
+  &.font-selector {}
+  &.kerning-training-field {
+    div {
+      font-size: 50px;
+    }
+  }
+  &.export-as {}
+}
