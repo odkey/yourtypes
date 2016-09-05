@@ -4,19 +4,23 @@
 'use strict';
 
 require('babel-register');
-require('babel-core');
-const { app, Menu, MenuItem,
-        BrowserWindow, crashReporter } = require('electron');
-
-const { KerningTrainingWindow } = require('./kerning_training_window');
+// require('babel-core');
+const { app, Menu, MenuItem, BrowserWindow, crashReporter } =
+  require('electron');
+const { KerningTrainingWindow } =
+  require('./kerning_training/scripts/kerning_training_window');
 
 class AppManager {
   constructor() {
     this.menu = undefined;
     this.kerningTrainingWindow =
-      new KerningTrainingWindow(`file://${ __dirname }/training.html`);
+      new KerningTrainingWindow(`file://${ __dirname }/kerning_training/index.html`);
+  }
+  runKerningTrainingWindow() {
+    this.kerningTrainingWindow.run();
   }
   addApplicationMenu() {
+    let _this = this;
     this.menu = Menu.getApplicationMenu();
     if (this.menu == false) {
       console.log('Application menu is not ready');
@@ -29,7 +33,7 @@ class AppManager {
           label: 'Kerning Training',
           accelerator: 'CmdOrCtrl+T',
           click(item, focusedWindow) {
-            this.runKerningTrainingWindow();
+            _this.runKerningTrainingWindow();
           }
         }
       ]
@@ -38,10 +42,6 @@ class AppManager {
     Menu.setApplicationMenu(this.menu);
     console.log('Applications menu has been updated');
   }
-  runKerningTrainingWindow() {
-    this.kerningTrainingWindow.run();
-  }
-
 }
 let appManager = new AppManager();
 
