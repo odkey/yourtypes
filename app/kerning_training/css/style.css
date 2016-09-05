@@ -1,2 +1,10 @@
 div.kerning-training-field div {
-  font-size: 50px; }
+  font-size: 50px;
+  letter-spacing: 0; }
+  div.kerning-training-field div span {
+    -webkit-user-select: none;
+       -moz-user-select: none;
+        -ms-user-select: none;
+            user-select: none; }
+    div.kerning-training-field div span:hover {
+      cursor: pointer; }

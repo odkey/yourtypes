@@ -7,6 +7,13 @@ div {
   &.kerning-training-field {
     div {
       font-size: 50px;
+      letter-spacing: 0;
+      span {
+        user-select: none;
+        &:hover {
+          cursor: pointer;
+        }
+      }
     }
   }
   &.export-as {}
