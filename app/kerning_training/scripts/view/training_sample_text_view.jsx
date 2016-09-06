@@ -13,7 +13,7 @@ export default class TrainingSampleTextView extends React.Component{
     }
   }
   render() {
-    const className = 'kerning-training-field-chars';
+    const className = 'kerning-training-field-chars hide-em-boxes hide-bounding-boxes';
     const style = {
       letterSpacing: '0px'
     };

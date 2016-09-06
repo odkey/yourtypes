@@ -12,19 +12,26 @@
     </script>
   </head>
   <body>
-    <div class="dataset-name">
-      <input type="text" name="dataset-name" value="" placeholder="データセット名">
-    </div>
     <div class="font-selector">
       <select name="">
         <option value="hiraginomincho">ヒラギノ明朝</option>
         <option value="hiraginokakugo">ヒラギノ角ゴ</option>
       </select>
     </div>
-    <div class="kerning-training-field">
-
+    <div class="field-setting">
+      <div class="field-setting-em-box">
+        <input type="checkbox" id="checkbox-em-box" name="field-setting-em-box" value="">
+        <label for="checkbox-em-box">仮想ボディを表示</label>
+      </div>
+      <div class="field-setting-bounding-box">
+        <input type="checkbox" id="checkbox-bounding-box" name="field-setting-bounding-box" value="">
+        <label for="checkbox-bounding-box">字面を表示</label>
+      </div>
     </div>
     <div class="export-as">
+      <div class="export-dataset-name">
+        <input type="text" name="dataset-name" value="" placeholder="データセット名">
+      </div>
       <div class="export-as-html">
         <input type="button" name="export-as-html" value="HTMLとして書き出し">
       </div>
@@ -32,6 +39,11 @@
         <input type="button" name="export-as-json" value="JSONとして書き出し">
       </div>
     </div>
+
+    <div class="kerning-training-field">
+
+    </div>
+
     <!-- <script type="text/javascript" src="js/training.js"></script> -->
   </body>
 </html>

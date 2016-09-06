@@ -8,10 +8,24 @@ div {
     div {
       font-size: 50px;
       letter-spacing: 0;
+      line-height: 2em;
       span {
+        // border-style: solid;
+        // border-width: 1px;
+        // border-color: rgba(255, 40, 40, 0.5);
         user-select: none;
         &:hover {
           cursor: pointer;
+        }
+      }
+      &.hide-em-boxes {
+        span {
+          border-width: 0;
+        }
+      }
+      &.hide-bounding-boxes {
+        span {
+
         }
       }
     }
