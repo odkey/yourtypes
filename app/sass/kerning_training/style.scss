@@ -10,6 +10,9 @@ div {
       letter-spacing: 0;
       line-height: 2em;
       span {
+        &::after {
+
+        }
         // border-style: solid;
         // border-width: 1px;
         // border-color: rgba(255, 40, 40, 0.5);

@@ -3,23 +3,14 @@
 
 'use strict';
 
+require('babel-polyfill');
+import request from 'request';
+import fs from 'fs';
+import JSZip from 'jszip'
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 import TrainingSampleTextView from './view/training_sample_text_view.jsx';
 
-// function toggleClass(element, className){
-// if (!element || !className){
-// return;
-// }
-// var classString = element.className, nameIndex = classString.indexOf(className);
-// if (nameIndex == -1) {
-// classString += ' ' + className;
-// }
-// else {
-// classString = classString.substr(0, nameIndex) + classString.substr(nameIndex+className.length);
-// }
-// element.className = classString;
-// }
 import Util from '../../common/scripts/util.jsx';
 class Training {
   constructor() {
@@ -28,7 +19,7 @@ class Training {
       isBoundingBoxShown: false
     }
     this.text =
-      'ある日の事でございます。御釈迦様おしゃかさまは極楽の蓮池はすいけのふちを、独りでぶらぶら御歩きになっていらっしゃいました。池の中に咲いている蓮はすの花は、みんな玉のようにまっ白で、そのまん中にある金色きんいろの蕊ずいからは、何とも云えない好よい匂においが、絶間たえまなくあたりへ溢あふれて居ります。極楽は丁度朝なのでございましょう。';
+      'ある日の事でございます。';//御釈迦様おしゃかさまは極楽の蓮池はすいけのふちを、独りでぶらぶら御歩きになっていらっしゃいました。池の中に咲いている蓮はすの花は、みんな玉のようにまっ白で、そのまん中にある金色きんいろの蕊ずいからは、何とも云えない好よい匂においが、絶間たえまなくあたりへ溢あふれて居ります。極楽は丁度朝なのでございましょう。';
     this.setTrainingText(this.text, () => {
       this.enableCharsToBeDragged();
       this.prepareEmBoxRect();
@@ -38,6 +29,7 @@ class Training {
   addUIEvents() {
     this.addEmBoxEvent();
     this.addBoundingBoxEvent();
+    this.addExportCharImagesEvent();
   }
   addEmBoxEvent() {
     let _this = this;
@@ -68,6 +60,13 @@ class Training {
       else {
 
       }
+    });
+  }
+  addExportCharImagesEvent() {
+    let _this = this;
+    let button = document.getElementsByClassName('export-char-images')[0];
+    button.addEventListener('click', (event) => {
+      this.saveCharsAsImages();
     });
   }
   setTrainingText(testText, callback) {
@@ -118,6 +117,53 @@ class Training {
         height: element.getClientRects()[0].height
       }
     });
+  }
+  saveCharsAsSimpleImages() {
+    // const folder =
+  }
+  saveCharsAsImages() {
+    let zip = new JSZip();
+    const folder =
+      document.getElementsByClassName('font-selector-items')[0].value;
+    const container =
+      document.getElementsByClassName('kerning-training-field-chars')[0];
+    let chars = container.childNodes;
+
+    const convert = (element, index, array) => {
+      return new Promise((resolve, reject) => {
+        html2canvas(element, {
+          onrendered: (canvas) => {
+            let data = canvas.toDataURL();
+            let img = document.createElement('img');
+            img.src = data;
+            zip.file(`${ element.innerText }.png`, img);
+            console.log(data, img);
+            // resolve(element);
+          }
+        });
+        setTimeout(resolve(index), 500);
+      });
+    }
+    let promises = [];
+    chars.forEach((element, index, array) => {
+      if (index > 40) { return; }
+      promises.push(convert(element, index, array));
+    });
+    promises.reduce((prev, curr, index, array) => {
+      return prev.then(curr);
+    }, Promise.resolve());
+
+    // Promise.all(promises)
+    //   .then((results) => {
+    //     console.log('results', results);
+    //   });
+    // createZip().then(() => {
+    //   console.log('zip', zip);
+    //   // let a = document.createElement('a');
+    //   // a.setAttribute('download', `${ folder }/${ element.innerText }.png`);
+    //   // a.setAttribute('href', data);
+    //   // a.click();
+    // });
   }
 }
 
