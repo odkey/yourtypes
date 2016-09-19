@@ -26,9 +26,9 @@ class Training {
       index: 0
     }
     this.text = this.sampleWords.words[this.sampleWords.index];
+    console.log('main', this.text);
     this.setTrainingText(this.text, () => {
-      this.enableCharsToBeDragged();
-      this.prepareEmBoxRect();
+      this.setTrainingTextCallback()
     });
     this.addUIEvents();
   }
@@ -71,8 +71,8 @@ class Training {
     });
   }
   addExportResultJSONEvent() {
-    let button document.getElementsByClassName('export-as-json')[0];
-    
+    let button = document.getElementsByClassName('export-as-json')[0];
+
   }
   addExportCharImagesEvent() {
     let _this = this;
@@ -89,11 +89,31 @@ class Training {
     });
   }
   setTrainingText(testText, callback) {
+    document.getElementsByClassName('kerning-training-field')[0].innerHTML = '';
     ReactDOM.render(
-      <TrainingSampleTextView text={testText} />,
+      <TrainingSampleTextView text={ testText } />,
       document.getElementsByClassName('kerning-training-field')[0],
       callback
     );
+  }
+  setTrainingTextCallback() {
+    this.prepareCharImageZip();
+    this.enableCharsToBeDragged();
+    this.prepareEmBoxRect();
+    console.log(this.zip);
+  }
+  prepareCharImageZip() {
+    const container =
+      document.getElementsByClassName('kerning-training-field-chars')[0];
+    let chars = container.childNodes;
+    let promises = [];
+    chars.forEach((element, index, array) => {
+      promises.push(this.convert_to_zip_item(element, index));
+    });
+    // promises.push(this.advance_word());
+    promises.reduce((prev, curr, index, array) => {
+      return prev.then(curr);
+    }, Promise.resolve());
   }
   enableCharsToBeDragged() {
     const container =
@@ -167,33 +187,43 @@ class Training {
       });
     };
   }
+
   advance_word() {
     return () => {
-      return new Promise((resolve, reject) => {
+    //   return new Promise((resolve, reject) => {
         this.text = this.sampleWords.words[++this.sampleWords.index];
         this.setTrainingText(this.text, () => {
-          this.enableCharsToBeDragged();
-          this.prepareEmBoxRect();
-          console.log(this.zip);
-          resolve();
+          this.setTrainingTextCallback();
+          // this.enableCharsToBeDragged();
+          // this.prepareEmBoxRect();
+          // console.log(this.zip);
+          // resolve();
         });
-      });
+    //   });
     }
   }
   advanceSampleWord() {
-    const folder =
-      document.getElementsByClassName('font-selector-items')[0].value;
-    const container =
-      document.getElementsByClassName('kerning-training-field-chars')[0];
-    let chars = container.childNodes;
-    let promises = [];
-    chars.forEach((element, index, array) => {
-      promises.push(this.convert_to_zip_item(element, index));
+    if (this.sampleWords.index == this.sampleWords.words.length-1) {
+      this.sampleWords.index = -1;
+    }
+    this.text = this.sampleWords.words[++this.sampleWords.index];
+    this.setTrainingText(this.text, () => {
+      this.setTrainingTextCallback();
     });
-    promises.push(this.advance_word());
-    promises.reduce((prev, curr, index, array) => {
-      return prev.then(curr);
-    }, Promise.resolve());
+    // const folder =
+    //   document.getElementsByClassName('font-selector-items')[0].value;
+    // const container =
+    //   document.getElementsByClassName('kerning-training-field-chars')[0];
+    // let chars = container.childNodes;
+    // let promises = [];
+    // chars.forEach((element, index, array) => {
+    //   promises.push(this.convert_to_zip_item(element, index));
+    // });
+    // promises.push(this.advance_word());
+    // promises.reduce((prev, curr, index, array) => {
+    //   return prev.then(curr);
+    // }, Promise.resolve());
+    // this.advance_word();
   }
 }
 

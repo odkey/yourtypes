@@ -18,6 +18,7 @@ export default class TrainingSampleTextView extends React.Component{
       letterSpacing: '0px'
     };
     let chars = [];
+    console.log(this.props);
     for (let i = 0; i < this.props.text.length; i++) {
       chars.push(<span key={ i } style={ style }>{ this.props.text[i] }</span>);
     }
