@@ -5,8 +5,8 @@
 
 require('babel-polyfill');
 import request from 'request';
-import fs from 'fs';
-import JSZip from 'jszip'
+import JSZip from 'jszip';
+import FileServer from 'file-server';
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 import TrainingSampleTextView from './view/training_sample_text_view.jsx';
@@ -128,30 +128,93 @@ class Training {
     const container =
       document.getElementsByClassName('kerning-training-field-chars')[0];
     let chars = container.childNodes;
-
-    const convert = (element, index, array) => {
-      return new Promise((resolve, reject) => {
-        html2canvas(element, {
-          onrendered: (canvas) => {
-            let data = canvas.toDataURL();
-            let img = document.createElement('img');
-            img.src = data;
-            zip.file(`${ element.innerText }.png`, img);
-            console.log(data, img);
-            // resolve(element);
-          }
+    let convert = (element, index) => {
+      return () => {
+        return new Promise((resolve, reject) => {
+          html2canvas(element, {
+            onrendered: (canvas) => {
+              // console.log(index, 'start');
+              let savable = new Image();
+              savable.src = canvas.toDataURL();
+              let options = {
+                base64: true,
+                binary: true,
+                compression: JSZip.DEFLATE,
+                compressionOptions: { level: 9 }
+              };
+              zip.file(`${ element.innerText }.png`,
+                       savable.src.split(',')[1],
+                       options);
+              console.log(index, 'end');
+              resolve();
+            }
+          });
         });
-        setTimeout(resolve(index), 500);
-      });
-    }
+      };
+    };
     let promises = [];
     chars.forEach((element, index, array) => {
-      if (index > 40) { return; }
-      promises.push(convert(element, index, array));
+      promises.push(convert(element, index));
+    });
+    promises.push(()=>{
+      zip.generateAsync({ type: 'blob' })
+        .then((blob) => {
+          saveAs(blob, `${ folder }.zip`);
+        });
     });
     promises.reduce((prev, curr, index, array) => {
       return prev.then(curr);
     }, Promise.resolve());
+
+    /*
+    chars.forEach((element, index, array) => {
+      // console.log(element, index, array);
+      html2canvas(element, {
+        onrendered: (canvas) => {
+          let savable = new Image();
+          savable.src = canvas.toDataURL();
+          let options = {
+            base64: true,
+            binary: true,
+            compression: JSZip.DEFLATE,
+            compressionOptions: { level: 1 }
+          };
+          let a = zip.file(`${ element.innerText }.png`,
+                   savable.src.split(',')[1],
+                   options);
+        }
+      });
+    });
+    zip.generateAsync({ type: 'blob' })
+      .then((blob) => {
+        saveAs(blob, `${ folder }.zip`);
+      });
+
+    */
+
+    // const convert = (element, index, array) => {
+    //   return new Promise((resolve, reject) => {
+    //     html2canvas(element, {
+    //       onrendered: (canvas) => {
+    //         let data = canvas.toDataURL();
+    //         let img = document.createElement('img');
+    //         img.src = data;
+    //         zip.file(`${ element.innerText }.png`, canvas, true);
+    //         console.log(zip);
+    //         // resolve(element);
+    //       }
+    //     });
+    //     setTimeout(resolve(index), 500);
+    //   });
+    // }
+    // let promises = [];
+    // chars.forEach((element, index, array) => {
+    //   promises.push(convert(element, index, array));
+    //   console.log('push', promises);
+    // });
+    // promises.reduce((prev, curr, index, array) => {
+    //   return prev.then(curr);
+    // }, Promise.resolve());
 
     // Promise.all(promises)
     //   .then((results) => {
