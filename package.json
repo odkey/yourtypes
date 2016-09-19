@@ -5,7 +5,8 @@
   "main": "app/main.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "electron ./app"
+    "start": "electron ./app",
+    "build": "electron-packager ./app YourTypes --platform=darwin --arch=x64 --version=1.4.0"
   },
   "babel": {
     "sourceMaps": "inline",

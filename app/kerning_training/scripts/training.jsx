@@ -20,6 +20,9 @@ class Training {
       isBoundingBoxShown: false
     }
     this.kernedChars = [];
+    this.result = {
+      'values': new Array()
+    };
     this.zip = new JSZip();
     this.sampleWords = {
       words: require('../../data/sample_text/kumo_no_ito/data.json')["words"],
@@ -35,6 +38,7 @@ class Training {
   addUIEvents() {
     this.addEmBoxEvent();
     this.addBoundingBoxEvent();
+    this.addExportResultJSONEvent();
     this.addExportCharImagesEvent();
     this.addAdvanceSampleWordEvent();
   }
@@ -72,7 +76,9 @@ class Training {
   }
   addExportResultJSONEvent() {
     let button = document.getElementsByClassName('export-as-json')[0];
-
+    button.addEventListener('click', (event) => {
+      this.exportResultJSON();
+    });
   }
   addExportCharImagesEvent() {
     let _this = this;
@@ -110,7 +116,6 @@ class Training {
     chars.forEach((element, index, array) => {
       promises.push(this.convert_to_zip_item(element, index));
     });
-    // promises.push(this.advance_word());
     promises.reduce((prev, curr, index, array) => {
       return prev.then(curr);
     }, Promise.resolve());
@@ -157,8 +162,31 @@ class Training {
       }
     });
   }
-  saveCharsAsSimpleImages() {
-    // const folder =
+  prepareResultJSON() {
+    const container =
+      document.getElementsByClassName('kerning-training-field-chars')[0];
+    let chars = container.childNodes;
+    chars.forEach((element, index, array) => {
+      if (index == array.length-1) { return; }
+      this.result.values.push({
+        'first_char': element.innerText,
+        'second_char': array[index+1].innerText,
+        'kerning_value': parseInt(element.style['letter-spacing'].substr('px'))
+      });
+      console.log(this.result);
+    });
+  }
+  exportResultJSON() {
+    let fontSelector =
+      document.getElementsByClassName('font-selector-items')[0];
+    let fontName = fontSelector.options[fontSelector.selectedIndex].value;
+    let filepath =
+      `../../data/sampled_data/${ fontName }/data.json`;
+    let blob =
+      new Blob([JSON.stringify(this.result)], { type: 'application/json' });
+      saveAs(blob, filepath);
+  }
+  saveResultJson() {
   }
   saveCharsAsImages() {
     const folder =
@@ -188,42 +216,16 @@ class Training {
     };
   }
 
-  advance_word() {
-    return () => {
-    //   return new Promise((resolve, reject) => {
-        this.text = this.sampleWords.words[++this.sampleWords.index];
-        this.setTrainingText(this.text, () => {
-          this.setTrainingTextCallback();
-          // this.enableCharsToBeDragged();
-          // this.prepareEmBoxRect();
-          // console.log(this.zip);
-          // resolve();
-        });
-    //   });
-    }
-  }
   advanceSampleWord() {
+    this.prepareResultJSON();
     if (this.sampleWords.index == this.sampleWords.words.length-1) {
       this.sampleWords.index = -1;
+      // Add event!!
     }
     this.text = this.sampleWords.words[++this.sampleWords.index];
     this.setTrainingText(this.text, () => {
       this.setTrainingTextCallback();
     });
-    // const folder =
-    //   document.getElementsByClassName('font-selector-items')[0].value;
-    // const container =
-    //   document.getElementsByClassName('kerning-training-field-chars')[0];
-    // let chars = container.childNodes;
-    // let promises = [];
-    // chars.forEach((element, index, array) => {
-    //   promises.push(this.convert_to_zip_item(element, index));
-    // });
-    // promises.push(this.advance_word());
-    // promises.reduce((prev, curr, index, array) => {
-    //   return prev.then(curr);
-    // }, Promise.resolve());
-    // this.advance_word();
   }
 }
 
