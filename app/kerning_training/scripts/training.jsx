@@ -133,19 +133,14 @@ class Training {
         return new Promise((resolve, reject) => {
           html2canvas(element, {
             onrendered: (canvas) => {
-              // console.log(index, 'start');
               let savable = new Image();
               savable.src = canvas.toDataURL();
               let options = {
-                base64: true,
-                binary: true,
-                compression: JSZip.DEFLATE,
-                compressionOptions: { level: 9 }
+                base64: true
               };
               zip.file(`${ element.innerText }.png`,
                        savable.src.split(',')[1],
                        options);
-              console.log(index, 'end');
               resolve();
             }
           });
@@ -165,68 +160,6 @@ class Training {
     promises.reduce((prev, curr, index, array) => {
       return prev.then(curr);
     }, Promise.resolve());
-
-    /*
-    chars.forEach((element, index, array) => {
-      // console.log(element, index, array);
-      html2canvas(element, {
-        onrendered: (canvas) => {
-          let savable = new Image();
-          savable.src = canvas.toDataURL();
-          let options = {
-            base64: true,
-            binary: true,
-            compression: JSZip.DEFLATE,
-            compressionOptions: { level: 1 }
-          };
-          let a = zip.file(`${ element.innerText }.png`,
-                   savable.src.split(',')[1],
-                   options);
-        }
-      });
-    });
-    zip.generateAsync({ type: 'blob' })
-      .then((blob) => {
-        saveAs(blob, `${ folder }.zip`);
-      });
-
-    */
-
-    // const convert = (element, index, array) => {
-    //   return new Promise((resolve, reject) => {
-    //     html2canvas(element, {
-    //       onrendered: (canvas) => {
-    //         let data = canvas.toDataURL();
-    //         let img = document.createElement('img');
-    //         img.src = data;
-    //         zip.file(`${ element.innerText }.png`, canvas, true);
-    //         console.log(zip);
-    //         // resolve(element);
-    //       }
-    //     });
-    //     setTimeout(resolve(index), 500);
-    //   });
-    // }
-    // let promises = [];
-    // chars.forEach((element, index, array) => {
-    //   promises.push(convert(element, index, array));
-    //   console.log('push', promises);
-    // });
-    // promises.reduce((prev, curr, index, array) => {
-    //   return prev.then(curr);
-    // }, Promise.resolve());
-
-    // Promise.all(promises)
-    //   .then((results) => {
-    //     console.log('results', results);
-    //   });
-    // createZip().then(() => {
-    //   console.log('zip', zip);
-    //   // let a = document.createElement('a');
-    //   // a.setAttribute('download', `${ folder }/${ element.innerText }.png`);
-    //   // a.setAttribute('href', data);
-    //   // a.click();
-    // });
   }
 }
 
