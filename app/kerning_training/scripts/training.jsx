@@ -12,14 +12,20 @@ import * as ReactDOM from 'react-dom';
 import TrainingSampleTextView from './view/training_sample_text_view.jsx';
 
 import Util from '../../common/scripts/util.jsx';
+
 class Training {
   constructor() {
     this.settings = {
       isEmBoxShown: false,
       isBoundingBoxShown: false
     }
-    this.text =
-      'ある日の事でございます。';//御釈迦様おしゃかさまは極楽の蓮池はすいけのふちを、独りでぶらぶら御歩きになっていらっしゃいました。池の中に咲いている蓮はすの花は、みんな玉のようにまっ白で、そのまん中にある金色きんいろの蕊ずいからは、何とも云えない好よい匂においが、絶間たえまなくあたりへ溢あふれて居ります。極楽は丁度朝なのでございましょう。';
+    this.kernedChars = [];
+    this.zip = new JSZip();
+    this.sampleWords = {
+      words: require('../../data/sample_text/kumo_no_ito/data.json')["words"],
+      index: 0
+    }
+    this.text = this.sampleWords.words[this.sampleWords.index];
     this.setTrainingText(this.text, () => {
       this.enableCharsToBeDragged();
       this.prepareEmBoxRect();
@@ -30,6 +36,7 @@ class Training {
     this.addEmBoxEvent();
     this.addBoundingBoxEvent();
     this.addExportCharImagesEvent();
+    this.addAdvanceSampleWordEvent();
   }
   addEmBoxEvent() {
     let _this = this;
@@ -52,8 +59,9 @@ class Training {
     let check = document.getElementsByName('field-setting-bounding-box')[0];
     check.addEventListener('change', (event) => {
       _this.settings.isBoundingBoxShown = event.target.checked;
-      Util.toggleClass(document.getElementsByClassName('kerning-training-field-chars')[0],
-      'hide-bounding-boxes');
+      Util.toggleClass(
+        document.getElementsByClassName('kerning-training-field-chars')[0],
+        'hide-bounding-boxes');
       if (_this.settings.isBoundingBoxShown) {
 
       }
@@ -62,11 +70,22 @@ class Training {
       }
     });
   }
+  addExportResultJSONEvent() {
+    let button document.getElementsByClassName('export-as-json')[0];
+    
+  }
   addExportCharImagesEvent() {
     let _this = this;
     let button = document.getElementsByClassName('export-char-images')[0];
     button.addEventListener('click', (event) => {
       this.saveCharsAsImages();
+    });
+  }
+  addAdvanceSampleWordEvent() {
+    let _this = this;
+    let button = document.getElementsByClassName('kerning-training-ui-next')[0];
+    button.addEventListener('click', (event) => {
+      this.advanceSampleWord();
     });
   }
   setTrainingText(testText, callback) {
@@ -122,41 +141,56 @@ class Training {
     // const folder =
   }
   saveCharsAsImages() {
-    let zip = new JSZip();
+    const folder =
+      document.getElementsByClassName('font-selector-items')[0].value;
+    this.zip.generateAsync({ type: 'blob' })
+      .then((blob) => {
+        saveAs(blob, `${ folder }.zip`);
+      });
+  }
+  convert_to_zip_item(element, index) {
+    return () => {
+      return new Promise((resolve, reject) => {
+        html2canvas(element, {
+          onrendered: (canvas) => {
+            let savable = new Image();
+            savable.src = canvas.toDataURL();
+            let options = {
+              base64: true
+            };
+            this.zip.file(`${ element.innerText }.png`,
+                     savable.src.split(',')[1],
+                     options);
+            resolve();
+          }
+        });
+      });
+    };
+  }
+  advance_word() {
+    return () => {
+      return new Promise((resolve, reject) => {
+        this.text = this.sampleWords.words[++this.sampleWords.index];
+        this.setTrainingText(this.text, () => {
+          this.enableCharsToBeDragged();
+          this.prepareEmBoxRect();
+          console.log(this.zip);
+          resolve();
+        });
+      });
+    }
+  }
+  advanceSampleWord() {
     const folder =
       document.getElementsByClassName('font-selector-items')[0].value;
     const container =
       document.getElementsByClassName('kerning-training-field-chars')[0];
     let chars = container.childNodes;
-    let convert = (element, index) => {
-      return () => {
-        return new Promise((resolve, reject) => {
-          html2canvas(element, {
-            onrendered: (canvas) => {
-              let savable = new Image();
-              savable.src = canvas.toDataURL();
-              let options = {
-                base64: true
-              };
-              zip.file(`${ element.innerText }.png`,
-                       savable.src.split(',')[1],
-                       options);
-              resolve();
-            }
-          });
-        });
-      };
-    };
     let promises = [];
     chars.forEach((element, index, array) => {
-      promises.push(convert(element, index));
+      promises.push(this.convert_to_zip_item(element, index));
     });
-    promises.push(()=>{
-      zip.generateAsync({ type: 'blob' })
-        .then((blob) => {
-          saveAs(blob, `${ folder }.zip`);
-        });
-    });
+    promises.push(this.advance_word());
     promises.reduce((prev, curr, index, array) => {
       return prev.then(curr);
     }, Promise.resolve());
