@@ -180,8 +180,11 @@ class Training {
     let fontSelector =
       document.getElementsByClassName('font-selector-items')[0];
     let fontName = fontSelector.options[fontSelector.selectedIndex].value;
+    this.result['font'] = {
+      name: fontName
+    }
     let filepath =
-      `../../data/sampled_data/${ fontName }/data.json`;
+      `${ fontName }_sampled_data.json`;
     let blob =
       new Blob([JSON.stringify(this.result)], { type: 'application/json' });
       saveAs(blob, filepath);

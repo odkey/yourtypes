@@ -115,14 +115,30 @@ class DatabaseCreator {
         console.log('error', this.densities, this.sampledData);
         return;
       }
-
+      let merge = (element, index) => {
+        return () => {
+          return new Promise((resolve, reject) => {
+            let firstDensity = this.densities[element['first_char']];
+            let secondDensity = this.densities[element['second_char']];
+            element['first_density'] = firstDensity;
+            element['second_density'] = secondDensity;
+            console.log(element);
+            resolve();
+          });
+        }
+      }
+      let promises = [];
       this.sampledData.values.forEach((element, index, array) => {
-        let firstDensity = this.densities[element['first_char']];
-        let secondDensity = this.densities[element['second_char']];
-        element['first_density'] = firstDensity;
-        element['second_density'] = secondDensity;
-        console.log(element);
+        promises.push(merge(element, index));
       });
+      promises.push(() => {
+        let blob = new Blob([JSON.stringify(this.sampledData)],
+                            { type: 'application/json' });
+        saveAs(blob, `${ this.sampledData.font.name }_merged_data.json`);
+      });
+      promises.reduce((prev, curr, index, array) => {
+        return prev.then(curr);
+      }, Promise.resolve());
     });
   }
 }
