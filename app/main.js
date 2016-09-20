@@ -9,15 +9,22 @@ const { app, Menu, MenuItem, BrowserWindow, crashReporter } =
   require('electron');
 const { KerningTrainingWindow } =
   require('./kerning_training/scripts/kerning_training_window');
+const { DatabaseCreatorWindow } =
+  require('./database_creator/scripts/database_creator_window');
 
 class AppManager {
   constructor() {
     this.menu = undefined;
-    this.kerningTrainingWindow =
-      new KerningTrainingWindow(`file://${ __dirname }/kerning_training/index.html`);
+    this.kerningTrainingWindow = new KerningTrainingWindow(
+      `file://${ __dirname }/kerning_training/index.html`);
+    this.databaseCreatorWindow = new DatabaseCreatorWindow(
+      `file://${ __dirname }/database_creator/index.html`);
   }
   runKerningTrainingWindow() {
     this.kerningTrainingWindow.run();
+  }
+  runDatabaseCreatorWindow() {
+    this.databaseCreatorWindow.run();
   }
   addApplicationMenu() {
     let _this = this;
@@ -34,6 +41,13 @@ class AppManager {
           accelerator: 'CmdOrCtrl+T',
           click(item, focusedWindow) {
             _this.runKerningTrainingWindow();
+          }
+        },
+        {
+          label: 'Database Creator',
+          accelerator: 'CmdOrCtrl+D',
+          click(item, focusedWindow) {
+            _this.runDatabaseCreatorWindow();
           }
         }
       ]
@@ -56,5 +70,6 @@ app.on('window-all-closed', () => {
 });
 app.on('ready', () => {
   appManager.addApplicationMenu();
-  appManager.runKerningTrainingWindow();
+  // appManager.runKerningTrainingWindow();
+  appManager.runDatabaseCreatorWindow();
 });

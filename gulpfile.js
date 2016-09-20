@@ -6,13 +6,13 @@ const autoprefixer = require('gulp-autoprefixer');
 
 const dist = './app';
 
-gulp.task('sass', ['sass:log', 'sass:impl']);
+gulp.task('sass', ['sass:info', 'sass:impl']);
 
-gulp.task('sass:log', () => {
+gulp.task('sass:info', () => {
   console.log('Transpile SCSS to CSS');
 });
 
-gulp.task('sass:impl', ['sass:impl:top', 'sass:impl:kerning_training']);
+gulp.task('sass:impl', ['sass:impl:top', 'sass:impl:kerning_training', 'sass:impl:database_creator']);
 
 gulp.task('sass:impl:top', () => {
   gulp.src('./app/sass/top/**/*.scss')
@@ -28,6 +28,14 @@ gulp.task('sass:impl:kerning_training', () => {
     .pipe(sass())
     .pipe(autoprefixer())
     .pipe(gulp.dest(`${ dist }/kerning_training/css`));
+});
+
+gulp.task('sass:impl:database_creator', () => {
+  gulp.src('./app/sass/database_creator/**/*.scss')
+    .pipe(plumber())
+    .pipe(sass())
+    .pipe(autoprefixer())
+    .pipe(gulp.dest(`${ dist }/database_creator/css`));
 });
 
 gulp.task('watch:sass', () => {

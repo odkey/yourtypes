@@ -1,11 +1,11 @@
-// YourTypes kerning_training_window.js
+// YourTypes common/scripts/base_window.js
 // Coded by Yota Odaka
 
 'use strict';
 
 const { BrowserWindow } = require('electron');
 
-export class KerningTrainingWindow {
+export default class BaseWindow {
   constructor(pathToHTML) {
     this.pathToHTML = pathToHTML;
     this.window = undefined;

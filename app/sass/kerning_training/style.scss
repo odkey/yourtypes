@@ -1,6 +1,8 @@
 // YourTypes kerning_training/css/style.css
 // Coded by Yota Odaka
 
+@import "../common/_variables";
+
 div {
   &.dataset-name {}
   &.font-selector {}
