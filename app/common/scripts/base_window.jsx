@@ -3,7 +3,7 @@
 
 'use strict';
 
-const { BrowserWindow } = require('electron');
+const { BrowserWindow, remote } = require('electron');
 
 export default class BaseWindow {
   constructor(pathToHTML) {
