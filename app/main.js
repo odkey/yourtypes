@@ -7,6 +7,8 @@ require('babel-register');
 // require('babel-core');
 const { app, Menu, MenuItem, BrowserWindow, crashReporter } =
   require('electron');
+const { ApplyingEditorWindow } =
+  require('./applying_editor/scripts/applying_editor_window');
 const { KerningTrainingWindow } =
   require('./kerning_training/scripts/kerning_training_window');
 const { DatabaseCreatorWindow } =
@@ -15,10 +17,15 @@ const { DatabaseCreatorWindow } =
 class AppManager {
   constructor() {
     this.menu = undefined;
+    this.applyingEditorWindow = new ApplyingEditorWindow(
+      `file://${ __dirname }/applying_editor/index.html`);
     this.kerningTrainingWindow = new KerningTrainingWindow(
       `file://${ __dirname }/kerning_training/index.html`);
     this.databaseCreatorWindow = new DatabaseCreatorWindow(
       `file://${ __dirname }/database_creator/index.html`);
+  }
+  runApplyingEditorWindow() {
+    this.applyingEditorWindow.run();
   }
   runKerningTrainingWindow() {
     this.kerningTrainingWindow.run();
@@ -36,6 +43,13 @@ class AppManager {
     const additional = new MenuItem({
       label: 'Applications',
       submenu: [
+        {
+          label: 'Applying Editor',
+          accelerator: 'CmdOrCtrl+A',
+          click(item, focusedWindow) {
+            _this.runApplyingEditorWindow();
+          }
+        },
         {
           label: 'Kerning Training',
           accelerator: 'CmdOrCtrl+T',
@@ -70,6 +84,7 @@ app.on('window-all-closed', () => {
 });
 app.on('ready', () => {
   appManager.addApplicationMenu();
+  appManager.runApplyingEditorWindow();
   // appManager.runKerningTrainingWindow();
-  appManager.runDatabaseCreatorWindow();
+  // appManager.runDatabaseCreatorWindow();
 });

@@ -12,7 +12,10 @@ gulp.task('sass:info', () => {
   console.log('Transpile SCSS to CSS');
 });
 
-gulp.task('sass:impl', ['sass:impl:top', 'sass:impl:kerning_training', 'sass:impl:database_creator']);
+gulp.task('sass:impl', [ 'sass:impl:top',
+                         'sass:impl:applying_editor',
+                         'sass:impl:kerning_training',
+                         'sass:impl:database_creator']);
 
 gulp.task('sass:impl:top', () => {
   gulp.src('./app/sass/top/**/*.scss')
@@ -20,6 +23,14 @@ gulp.task('sass:impl:top', () => {
     .pipe(sass())
     .pipe(autoprefixer())
     .pipe(gulp.dest(`${ dist }/top/css`));
+});
+
+gulp.task('sass:impl:applying_editor', () => {
+  gulp.src('./app/sass/applying_editor/**/*.scss')
+    .pipe(plumber())
+    .pipe(sass())
+    .pipe(autoprefixer())
+    .pipe(gulp.dest(`${ dist }/applying_editor/css`));
 });
 
 gulp.task('sass:impl:kerning_training', () => {
@@ -42,4 +53,4 @@ gulp.task('watch:sass', () => {
   gulp.watch(['./app/sass/**/*.scss', './app/sass/**/_*.scss'], ['sass']);
 });
 
-gulp.task('watch', ['watch:sass']);
+gulp.task('watch', ['sass', 'watch:sass']);

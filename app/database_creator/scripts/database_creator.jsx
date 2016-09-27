@@ -1,4 +1,4 @@
-// YourTypes database_creator/scripts/database_creator.js
+// YourTypes database_creator/scripts/database_creator.jsx
 // Coded by Yota Odaka
 
 'use strict';
