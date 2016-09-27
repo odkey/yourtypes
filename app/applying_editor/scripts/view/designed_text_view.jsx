@@ -13,7 +13,7 @@ export default class DesignedTextView extends React.Component {
     };
   }
   render() {
-    const className = '';
+    const className = 'designed-text-field-chars';
     const style = {
       letterSpacing: '0em'
     };

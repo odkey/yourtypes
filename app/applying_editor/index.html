@@ -4,6 +4,7 @@
     <meta charset="utf-8">
     <title>YourTypes Applying Editor</title>
     <link rel="stylesheet" href="./css/style.css" charset="utf-8">
+    <script type="text/javascript" src="../lib/html2canvas/html2canvas.min.js"></script>
     <script type="text/javascript">
       window.onload = () => {
         require('babel-register');
@@ -12,11 +13,11 @@
     </script>
   </head>
   <body>
-    <div class="merged-data-json-selector">
-      <input type="button" name="merged-data-json-selector" value="カーニングデータを開く">
-    </div>
     <div class="new-text-input">
       <textarea name="new-text-input" rows="8" cols="40" placeholder="new text"></textarea>
+    </div>
+    <div class="merged-data-json-selector">
+      <input type="button" name="merged-data-json-selector" value="カーニングデータを開く">
     </div>
     <div class="apply-merged-json-to-new-text">
       <input type="button" name="apply-merged-json-to-new-text" value="データを適用する">
