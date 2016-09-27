@@ -16,16 +16,31 @@ const dialog = remote.dialog;
 
 class ApplyingEditor {
   constructor() {
+    this.mergedData = undefined;
     this.addUIEvents();
   }
   addUIEvents() {
-    this.addSelectMergedDataJSONEvent();
+    this.addMergedDataJSONSelectEvent();
   }
-  addSelectMergedDataJSONEvent() {
+  addMergedDataJSONSelectEvent() {
     let _this = this;
     let button = document.getElementsByName('merged-data-json-selector')[0];
     button.addEventListener('click', (event) => {
-      
+      this.mergedData = {};
+      let focusedWindow = remote.getCurrentWindow();
+      let options = {
+        properties: [
+          'openFile'
+        ]
+      };
+      dialog.showOpenDialog(focusedWindow, options, (file) => {
+        if (file == undefined) { return; }
+        fs.readFile(file[0], 'utf8', (error, rawData) => {
+          if (error) { return; }
+          this.mergedData = JSON.parse(rawData);
+          console.log(this.mergedData);
+        });
+      });
     });
   }
 }
