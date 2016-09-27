@@ -8,6 +8,7 @@ import fs from 'fs';
 import request from 'request';
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
+import DesignedTextView from './view/designed_text_view.jsx';
 
 import Util from '../../common/scripts/util.jsx';
 
@@ -20,7 +21,34 @@ class ApplyingEditor {
     this.addUIEvents();
   }
   addUIEvents() {
+    this.addNewTextInputEvent();
     this.addMergedDataJSONSelectEvent();
+    this.addApplyingDataToNewTextEvent();
+  }
+  setDesignedText(text, callback) {
+    document.getElementsByClassName('designed-text-field')[0].innerHTML = '';
+    ReactDOM.render(
+      <DesignedTextView text={ text }/>,
+      document.getElementsByClassName('designed-text-field')[0],
+      callback
+    );
+  }
+  addNewTextInputEvent() {
+    let _this = this;
+    let textarea = document.getElementsByName('new-text-input')[0];
+    textarea.addEventListener('change', (event) => {
+      let text = event.srcElement.value;
+      this.setDesignedText(text);
+      console.log(text);
+    });
+  }
+  addApplyingDataToNewTextEvent() {
+    let _this = this;
+    let button = document.getElementsByName('apply-merged-json-to-new-text')[0];
+    button.addEventListener('click', (event) => {
+      let newText = document.getElementsByName('new-text-input')[0].value;
+      console.log(newText);
+    });
   }
   addMergedDataJSONSelectEvent() {
     let _this = this;
