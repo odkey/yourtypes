@@ -19,6 +19,8 @@ class ApplyingEditor {
   constructor() {
     this.mergedData = undefined;
     this.densities = undefined;
+    this.nearest = undefined;
+
     this.addUIEvents();
   }
   addUIEvents() {
@@ -39,7 +41,40 @@ class ApplyingEditor {
     let textarea = document.getElementsByName('new-text-input')[0];
     textarea.addEventListener('change', (event) => {
       let text = event.srcElement.value;
-      this.setDesignedText(text);
+      this.setDesignedText(text, () => {
+        this.analyseNewText();
+      });
+    });
+  }
+  analyseNewText() {
+    let chars = document.getElementsByClassName(
+      'designed-text-field-chars')[0].childNodes;
+    if (chars.length < 2) { return; }
+    let promises = [];
+    chars.forEach((element, index, array) => {
+      promises.push(this.analyse_char(element, index));
+    });
+    promises.push(() => {
+      console.log('densities: ', this.densities);
+    });
+    promises.reduce((prev, curr, index, array) => {
+      return prev.then(curr);
+    }, Promise.resolve());
+  }
+  addAnalysingNewTextEvent() {
+    let _this = this;
+    let button = document.getElementsByName('analyse-new-text')[0];
+    button.addEventListener('click', (event) => {
+      let chars = document.getElementsByClassName(
+        'designed-text-field-chars')[0].childNodes;
+      if (chars.length < 2) { return; }
+      let promises = [];
+      chars.forEach((element, index, array) => {
+        promises.push(this.analyse_char(element, index));
+      });
+      promises.push(() => {
+        console.log('densities: ', this.densities);
+      });
     });
   }
   analyse_char(element, index) {
@@ -81,26 +116,68 @@ class ApplyingEditor {
       });
     }
   }
-  apply_data(element1, element2, index) {
-    if (this.mergedData == false) { return; }
-    // element1.style.letterSpacing = this.densities[element1.innerText]
+  apply_data(element1, element2) {
+    return () => {
+      return new Promise((resolve, reject) => {
+        if (this.mergedData.length <= 0 ||
+            element1.textContent == '' ||
+            element2.textContent == '') { resolve(); }
+        let nearest = { index: -1, distance_square: 10 };
+        let firstDensity = this.densities[element1.textContent];
+        let secondDensity = this.densities[element2.textContent];
+        let search_nearest = (element, index) => {
+          return () => {
+            return new Promise((resolve, reject) => {
+              let distanceSquare =
+                this.distance_square(parseFloat(firstDensity),
+                                     parseFloat(secondDensity),
+                                     element.first_density,
+                                     element.second_density);
+              if (index == 0 || distanceSquare < nearest.distance_square) {
+                nearest = { index: index, distance_square: distanceSquare }
+              }
+              resolve();
+            });
+          }
+        }
+        let promises = [];
+        this.mergedData.forEach((element, index) => {
+          promises.push(search_nearest(element, index));
+        });
+        promises.push(() => {
+          console.log(this.mergedData[nearest.index]);
+          element1.style.letterSpacing =
+            `${ this.mergedData[nearest.index]['letter_space_rate'] }em`;
+          resolve();
+        });
+        promises.reduce((prev, curr, index, array) => {
+          return prev.then(curr);
+        }, Promise.resolve());
+      });
+    }
+  }
+  distance_square(pointX, pointY, pivotX, pivotY) {
+    let diffX = pivotX - pointX;
+    let diffY = pivotY - pointY;
+    return  diffX * diffX + diffY * diffY;
   }
   addApplyingDataToNewTextEvent() {
     let _this = this;
     this.densities = {};
+    this.nearest = { index: 0, distance_square: 0 }
     let button = document.getElementsByName('apply-merged-json-to-new-text')[0];
     button.addEventListener('click', (event) => {
       let chars =　document.getElementsByClassName(
         'designed-text-field-chars')[0].childNodes;
       let promises = [];
-      chars.forEach((element, index) => {
-        promises.push(this.analyse_char(element, index));
-      });
       chars.forEach((element, index, array) => {
-
+        if (index+1 >= array.length) { return;}
+        else　{
+          promises.push(this.apply_data(array[index], array[index+1]));
+        }
       });
       promises.push(() => {
-        console.log(this.densities);
+
       });
       promises.reduce((prev, curr, index, array) => {
         return prev.then(curr);
@@ -125,12 +202,14 @@ class ApplyingEditor {
           this.mergedData = [];
           let json = JSON.parse(rawData);
           json.values.forEach((element, index) => {
-            const item = {
-              first_density: element.first_density,
-              second_density: element.second_density,
-              letter_space_rate: element.kerning_value/50
-            };
-            this.mergedData.push(item);
+            if (element.first_density > 0 && element.second_density > 0) {
+              const item = {
+                first_density: element.first_density,
+                second_density: element.second_density,
+                letter_space_rate: element.kerning_value/50.0
+              };
+              this.mergedData.push(item);
+            }
           });
           console.log(this.mergedData);
         });
