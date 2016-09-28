@@ -1,0 +1,13 @@
+div.kerning-training-field div {
+  font-size: 50px;
+  letter-spacing: 0;
+  line-height: 2em; }
+  div.kerning-training-field div span {
+    -webkit-user-select: none;
+       -moz-user-select: none;
+        -ms-user-select: none;
+            user-select: none; }
+    div.kerning-training-field div span:hover {
+      cursor: pointer; }
+  div.kerning-training-field div.hide-em-boxes span {
+    border-width: 0; }

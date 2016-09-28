@@ -1,0 +1,14 @@
+// YourTypes applying_editor/css/style.css
+// Coded by Yota Odaka
+
+@import "../common/_variables";
+
+div {
+  &.designed-text-field {
+    div.designed-text-field-chars {
+      span {
+        font-size: 50px;
+      }
+    }
+  }
+}

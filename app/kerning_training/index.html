@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>YourTypes Training</title>
+    <link rel="stylesheet" href="./css/style.css" charset="utf-8">
+    <script type="text/javascript" src="../lib/html2canvas/html2canvas.min.js"></script>
+    <script type="text/javascript" src="../lib/file-saver/FileSaver.min.js"></script>
+    <script type="text/javascript">
+      window.onload = () => {
+        require('babel-register');
+        require('./scripts/training');
+      }
+    </script>
+  </head>
+  <body>
+    <div class="font-selector">
+      <select class="font-selector-items" name="">
+        <option value="hiraginomincho">ヒラギノ明朝</option>
+        <!-- <option value="hiraginokakugo">ヒラギノ角ゴ</option> -->
+      </select>
+    </div>
+    <div class="field-setting">
+      <div class="field-setting-em-box">
+        <input type="checkbox" id="checkbox-em-box" name="field-setting-em-box" value="">
+        <label for="checkbox-em-box">仮想ボディを表示</label>
+      </div>
+      <div class="field-setting-bounding-box">
+        <input type="checkbox" id="checkbox-bounding-box" name="field-setting-bounding-box" value="">
+        <label for="checkbox-bounding-box">字面を表示</label>
+      </div>
+    </div>
+    <div class="export-as">
+      <div class="export-dataset-name">
+        <input type="text" name="dataset-name" value="" placeholder="データセット名">
+      </div>
+      <div class="export-as-html">
+        <input type="button" name="export-as-html" value="HTMLとして書き出し">
+      </div>
+      <div class="export-as-json">
+        <input type="button" name="export-as-json" value="JSONとして書き出し">
+      </div>
+      <div class="export-char-images">
+        <input type="button" name="export-char-images" value="文字を画像として書き出し">
+      </div>
+    </div>
+
+    <div class="kerning-training-field">
+
+    </div>
+    <div class="kerning-training-ui">
+      <div class="kerning-training-ui-next">
+        <input type="button" name="kerning-training-ui-next" value="次のサンプル">
+      </div>
+    </div>
+    <!-- <script type="text/javascript" src="js/training.js"></script> -->
+  </body>
+</html>
