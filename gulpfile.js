@@ -13,6 +13,7 @@ gulp.task('sass:info', () => {
 });
 
 gulp.task('sass:impl', [ 'sass:impl:top',
+                         'sass:impl:main_application',
                          'sass:impl:applying_editor',
                          'sass:impl:kerning_training',
                          'sass:impl:database_creator']);
@@ -23,6 +24,14 @@ gulp.task('sass:impl:top', () => {
     .pipe(sass())
     .pipe(autoprefixer())
     .pipe(gulp.dest(`${ dist }/top/css`));
+});
+
+gulp.task('sass:impl:main_application', () => {
+  gulp.src('./app/sass/main_application/**/*.scss')
+    .pipe(plumber())
+    .pipe(sass())
+    .pipe(autoprefixer())
+    .pipe(gulp.dest(`${ dist }/main_application/css`));
 });
 
 gulp.task('sass:impl:applying_editor', () => {
