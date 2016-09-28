@@ -98,8 +98,8 @@ app.on('window-all-closed', () => {
 });
 app.on('ready', () => {
   appManager.addApplicationMenu();
-  appManager.runMainApplicationWindow();
-  // appManager.runApplyingEditorWindow();
+  // appManager.runMainApplicationWindow();
+  appManager.runApplyingEditorWindow();
   // appManager.runKerningTrainingWindow();
   // appManager.runDatabaseCreatorWindow();
 });
