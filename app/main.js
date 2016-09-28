@@ -45,7 +45,7 @@ class AppManager {
       submenu: [
         {
           label: 'Applying Editor',
-          accelerator: 'CmdOrCtrl+A',
+          accelerator: 'CmdOrCtrl+N',
           click(item, focusedWindow) {
             _this.runApplyingEditorWindow();
           }
