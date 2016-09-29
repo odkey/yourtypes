@@ -20,8 +20,11 @@ class Training {
       isEmBoxShown: false,
       isBoundingBoxShown: false
     }
+    this.isTextRendered = false;
     this.isStayPhase = true;
     this.isDataReady = false;
+    this.isDataAnalysed = false;
+    this.isDataMerged = false;
     // To make a dropbox contains all fonts your system has
     this.initFontSelector(() => {
       // Followings are callback functions
@@ -42,8 +45,11 @@ class Training {
       index: 0
     }
     this.text = this.sampleWords.words[this.sampleWords.index];
+    // this.setTrainingText(this.text, () => {
+    //   this.setTrainingTextCallback()
+    // });
     this.setTrainingText(this.text, () => {
-      this.setTrainingTextCallback()
+      this.enableCharsToBeDragged();
     });
     this.addUIEvents();
   }
@@ -54,12 +60,36 @@ class Training {
     this.addAdvanceSampleWordEvent();
     this.addKerningSamplingFinishEvent();
     this.addMergingDensityIntoLetterSpaceEvent();
+
+    this.addSamplingStartEvent();
+  }
+  addSamplingStartEvent() {
+    let button =
+      document.getElementsByName('sampling-ui-start')[0];
+    button.addEventListener('click', (event) => {
+      if (!this.isStayPhase) { return; }
+      this.resetData();
+      this.isStayPhase = false;
+      this.storeCharImages();
+      let timeout = setTimeout(() => {
+        if (this.isTextRendered) {
+          this.isStayPhase = false;
+          console.log('Those chars are stored.', this.images);
+          clearTimeout(timeout);
+        }
+      }, 100);
+    });
+  }
+  resetData() {
+    this.result = { values: new Array() };
+    this.images = new Array();
+    this.densities = undefined;
   }
   addMergingDensityIntoLetterSpaceEvent() {
     let button =
       document.getElementsByName('merge-density-into-letter-space')[0];
     button.addEventListener('click', (event) => {
-      if (!this.isStayPhase || !this.isDataReady) { return; }
+      if (!this.isStayPhase) { return; }
       this.mergeDensitiesIntoLetterSpaceData();
       this.isDataReady = true;
     });
@@ -67,17 +97,33 @@ class Training {
   addKerningSamplingFinishEvent() {
     let button = document.getElementsByName('finish-kerning-sampling')[0];
     button.addEventListener('click', (event) => {
-      if (this.isStayPhase || this.isDataReady) { return; }
+      if (this.isStayPhase) { return; }
       this.prepareResultJSON();
-      this.analyseCharDensities();
-      this.isStayPhase = true;
-      // this.mergeDensitiesIntoLetterSpaceData();
+      // this.analyseCharDensities();
+      let timeout1 = setTimeout(() => {
+        if (this.isDataReady) {
+          this.analyseCharDensities();
+          let timeout2 = setTimeout(() => {
+            if (this.isDataAnalysed) {
+              this.mergeDensitiesIntoLetterSpaceData();
+              let timeout3 = setTimeout(() => {
+                if (this.isDataMerged) {
+                  this.isStayPhase = true;
+                  clearTimeout(timeout3);
+                }
+              }, 100);
+              clearTimeout(timeout2);
+            }
+          }, 100);
+          clearTimeout(timeout1);
+        }
+      }, 100);
     });
   }
   addFontSizeInputEvent() {
     let input = document.getElementsByName('font-size-input')[0];
     input.addEventListener('change', (event) => {
-      if (!this.isStayPhase || this.isDataReady) { return; }
+      if (!this.isStayPhase) { return; }
       this.setKerningFieldFontSize(event.target.value);
     });
   }
@@ -85,7 +131,7 @@ class Training {
     let _this = this;
     let selector = document.getElementsByClassName('font-selector-items')[0];
     selector.addEventListener('change', (event) => {
-      if (!this.isStayPhase || this.isDataReady) { return; }
+      if (!this.isStayPhase) { return; }
       let selected = selector.options[selector.selectedIndex];
       let name = selected.dataset.postscriptname;
       let path = selected.dataset.path;
@@ -95,7 +141,7 @@ class Training {
   addExportResultJSONEvent() {
     let button = document.getElementsByName('export-as-json')[0];
     button.addEventListener('click', (event) => {
-      if (!this.isStayPhase || !this.isDataReady) { return; }
+      if (!this.isStayPhase) { return; }
       this.exportResultJSON();
     });
   }
@@ -103,7 +149,7 @@ class Training {
     let _this = this;
     let button = document.getElementsByName('export-char-images')[0];
     button.addEventListener('click', (event) => {
-      if (!this.isStayPhase || !this.isDataReady) { return; }
+      if (!this.isStayPhase) { return; }
       this.saveCharsAsImages();
     });
   }
@@ -111,16 +157,20 @@ class Training {
     let _this = this;
     let button = document.getElementsByName('kerning-training-ui-next')[0];
     button.addEventListener('click', (event) => {
-      if (this.isStayPhase || this.isDataReady) { return; }
+      if (this.isStayPhase) { return; }
       this.advanceSampleWord();
     });
   }
   setTrainingText(testText, callback) {
+    this.isTextRendered = false;
     document.getElementsByClassName('kerning-training-field')[0].innerHTML = '';
     ReactDOM.render(
       <TrainingSampleTextView text={ testText } />,
       document.getElementsByClassName('kerning-training-field')[0],
-      callback
+      () => {
+        this.isTextRendered = true;
+        callback();
+      }
     );
   }
   setTrainingTextCallback() {
@@ -134,11 +184,13 @@ class Training {
     // this.setKerningFieldFontSize(50);
   }
   storeCharImages() {
+    this.isTextRendered = false;
     const container =
       document.getElementsByClassName('kerning-training-field-chars')[0];
     let chars = container.childNodes;
     // this.images = chars.cloneNode(true);
-    chars.forEach((element, index) => {
+    let runningCount = 0;
+    chars.forEach((element, index, array) => {
       html2canvas(element, {
         onrendered: (canvas) => {
           let image = new Image();
@@ -148,12 +200,15 @@ class Training {
             char: element.textContent
           };
           this.images.push(object);
+          runningCount++;
+          if (runningCount == array.length) { this.isTextRendered = true; }
         }
       });
     });
   }
   analyseCharDensities() {
     console.log('Start to analying char densities.');
+    this.isDataAnalysed = false;
     this.densities = {};
     this.images.forEach((element, index) => {
       let canvas = document.createElement('canvas');
@@ -187,6 +242,7 @@ class Training {
         promises.push(() => {
           density = sumBlack / (image.width*image.height);
           this.densities[element.char] = density;
+          this.isDataAnalysed = true;
         });
         promises.reduce((prev, curr, index, array) => {
           return prev.then(curr);
@@ -196,6 +252,7 @@ class Training {
   }
   mergeDensitiesIntoLetterSpaceData() {
     console.log('Start to merge density data into letter space data.');
+    this.isDataMerged = false;
     let fontsize =
       parseFloat(document.getElementsByName('font-size-input')[0].value);
     let merge = (element, index) => {
@@ -217,7 +274,8 @@ class Training {
       promises.push(merge(element, index));
     });
     promises.push(() => {
-      console.log(this.result);
+      console.log('Data is merged', this.result);
+      this.isDataMerged = true;
     });
     promises.reduce((prev, curr, index, array) => {
       return prev.then(curr);
@@ -237,11 +295,16 @@ class Training {
     }, Promise.resolve());
   }
   enableCharsToBeDragged() {
+    this.isTextRendered = false;
     const container =
       document.getElementsByClassName('kerning-training-field-chars')[0];
     let chars = container.childNodes;
+    let runningCount = 0;
     chars.forEach((element, index, array) => {
-      if (index == 0) { return; }
+      if (index == 0) {
+        runningCount++;
+        return;
+      }
       element.dragging = false;
       // Make drag events to each span elements
       element.addEventListener('mousedown', () => {
@@ -265,20 +328,32 @@ class Training {
           element.pivot = event.clientX;
         }
       });
+      runningCount++;
+      if (runningCount == array.length) { this.isTextRendered = true; }
     });
   }
   prepareResultJSON() {
+    console.log('Start to prepare result JSON');
+    this.isDataReady = false;
     const container =
       document.getElementsByClassName('kerning-training-field-chars')[0];
     let chars = container.childNodes;
+    let runningCount = 0;
     chars.forEach((element, index, array) => {
-      if (index == array.length-1) { return; }
-      this.result.values.push({
-        'first_char': element.textContent,
-        'second_char': array[index+1].textContent,
-        'kerning_value': parseInt(element.style['letter-spacing'].substr('px'))
-      });
-      console.log(this.result);
+      if (index == array.length-1) {
+        runningCount++;
+      }
+      else {
+        this.result.values.push({
+          'first_char': element.textContent,
+          'second_char': array[index+1].textContent,
+          'kerning_value': parseInt(element.style['letter-spacing'].substr('px'))
+        });
+        runningCount++;
+      }
+      if (runningCount == array.length) {
+        this.isDataReady = true;
+      }
     });
   }
   exportResultJSON() {
@@ -373,6 +448,7 @@ class Training {
                                   selected.dataset.path);
   }
   setKerningFieldFontStyle(name, path) {
+    this.isTextRendered = false;
     let className = 'additional-font-face-style-tag';
     Util.deleteElementWithClassName(className);
     let style = document.createElement('style');
@@ -386,11 +462,14 @@ class Training {
     let field =
       document.getElementsByClassName('kerning-training-field-chars')[0];
     field.style.fontFamily = name;
+    this.isTextRendered = true;
   }
   setKerningFieldFontSize(size) {
-      let field =
-        document.getElementsByClassName('kerning-training-field-chars')[0];
-      field.style.fontSize = `${ size }px`;
+    this.isTextRendered = false;
+    let field =
+      document.getElementsByClassName('kerning-training-field-chars')[0];
+    field.style.fontSize = `${ size }px`;
+    this.isTextRendered = true;
   }
 }
 
