@@ -55,7 +55,9 @@ class Training {
   addKerningSamplingFinishEvent() {
     let button = document.getElementsByName('finish-kerning-sampling')[0];
     button.addEventListener('click', (event) => {
+      this.prepareResultJSON();
       this.analyseCharDensities();
+      // this.mergeDensitiesIntoLetterSpaceData();
     });
   }
   addFontSizeInputEvent() {
@@ -105,7 +107,6 @@ class Training {
   setTrainingTextCallback() {
     // To store chars as images
     this.storeCharImages();
-    // this.analyseCharImages();
     // To add rendered chars to zip object
     this.prepareCharImageZip();
     // To make the text draggable
@@ -173,6 +174,35 @@ class Training {
         }, Promise.resolve());
       }
     });
+  }
+  mergeDensitiesIntoLetterSpaceData() {
+    console.log('Start to merge density data into letter space data.');
+    let merge = (element, index) => {
+      return () => {
+        return new Promise((resolve, reject) => {
+          let firstDensity = this.densities[element['first_char']];
+          let secondDensity = this.densities[element['second_char']];
+          element['first_density'] = firstDensity;
+          element['second_density'] = secondDensity;
+          console.log(element);
+          resolve();
+        });
+      }
+    }
+    let promises = [];
+    this.result.values.forEach((element, index, array) => {
+      promises.push(merge(element, index));
+    });
+    promises.push(() => {
+      // let blob = new Blob([JSON.stringify(this.sampledData)],
+      //                     { type: 'application/json' });
+      // saveAs(blob, `${ this.sampledData.font.name }_merged_data.json`);
+      console.log(this.result);
+    });
+    promises.reduce((prev, curr, index, array) => {
+      return prev.then(curr);
+    }, Promise.resolve());
+
   }
   prepareCharImageZip() {
     const container =
