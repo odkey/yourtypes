@@ -4,7 +4,7 @@
 'use strict';
 
 require('babel-polyfill');
-// import request from 'request';
+
 import JSZip from 'jszip';
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
@@ -15,10 +15,8 @@ import FontWeightSelectorView from './view/font_weight_selector_view.jsx';
 
 import Util from '../../common/scripts/util.jsx';
 
-let self;
 class Training {
   constructor() {
-    self = this;
     this.settings = {
       isEmBoxShown: false,
       isBoundingBoxShown: false
