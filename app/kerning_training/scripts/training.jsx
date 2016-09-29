@@ -161,15 +161,31 @@ class Training {
   exportResultJSON() {
     let fontSelector =
       document.getElementsByClassName('font-selector-items')[0];
-    let fontName = fontSelector.options[fontSelector.selectedIndex].value;
-    this.result['font'] = {
-      name: fontName
+    let selected = fontSelector.options[fontSelector.selectedIndex];
+    this.result['info'] = {
+      path: selected.dataset.path,
+      style: selected.dataset.style,
+      family: selected.dataset.family,
+      weight: selected.dataset.weight,
+      italic: selected.dataset.italic,
+      monospace: selected.dataset.monospace,
+      postscript_name: selected.dataset.postscriptname
     }
-    let filepath =
-      `${ fontName }_sampled_data.json`;
+    let datasetName =
+      document.getElementsByName('dataset-name')[0].value;
+    let filename;
+    if (datasetName != ''){
+      filename =
+        `yourtypes-${ datasetName }-${ this.result.info.postscript_name }`;
+    }
+    else {
+      filename =
+        `yourtypes-${ this.result.info.postscript_name }`;
+    }
+    console.log(filename);
     let blob =
       new Blob([JSON.stringify(this.result)], { type: 'application/json' });
-      saveAs(blob, filepath);
+      saveAs(blob, filename);
   }
   saveCharsAsImages() {
     const folder =
