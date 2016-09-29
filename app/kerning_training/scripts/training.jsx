@@ -20,6 +20,8 @@ class Training {
       isEmBoxShown: false,
       isBoundingBoxShown: false
     }
+    this.isStayPhase = true;
+    this.isDataReady = false;
     // To make a dropbox contains all fonts your system has
     this.initFontSelector(() => {
       // Followings are callback functions
@@ -57,20 +59,25 @@ class Training {
     let button =
       document.getElementsByName('merge-density-into-letter-space')[0];
     button.addEventListener('click', (event) => {
+      if (!this.isStayPhase || !this.isDataReady) { return; }
       this.mergeDensitiesIntoLetterSpaceData();
+      this.isDataReady = true;
     });
   }
   addKerningSamplingFinishEvent() {
     let button = document.getElementsByName('finish-kerning-sampling')[0];
     button.addEventListener('click', (event) => {
+      if (this.isStayPhase || this.isDataReady) { return; }
       this.prepareResultJSON();
       this.analyseCharDensities();
+      this.isStayPhase = true;
       // this.mergeDensitiesIntoLetterSpaceData();
     });
   }
   addFontSizeInputEvent() {
     let input = document.getElementsByName('font-size-input')[0];
     input.addEventListener('change', (event) => {
+      if (!this.isStayPhase || this.isDataReady) { return; }
       this.setKerningFieldFontSize(event.target.value);
     });
   }
@@ -78,6 +85,7 @@ class Training {
     let _this = this;
     let selector = document.getElementsByClassName('font-selector-items')[0];
     selector.addEventListener('change', (event) => {
+      if (!this.isStayPhase || this.isDataReady) { return; }
       let selected = selector.options[selector.selectedIndex];
       let name = selected.dataset.postscriptname;
       let path = selected.dataset.path;
@@ -87,6 +95,7 @@ class Training {
   addExportResultJSONEvent() {
     let button = document.getElementsByName('export-as-json')[0];
     button.addEventListener('click', (event) => {
+      if (!this.isStayPhase || !this.isDataReady) { return; }
       this.exportResultJSON();
     });
   }
@@ -94,6 +103,7 @@ class Training {
     let _this = this;
     let button = document.getElementsByName('export-char-images')[0];
     button.addEventListener('click', (event) => {
+      if (!this.isStayPhase || !this.isDataReady) { return; }
       this.saveCharsAsImages();
     });
   }
@@ -101,6 +111,7 @@ class Training {
     let _this = this;
     let button = document.getElementsByName('kerning-training-ui-next')[0];
     button.addEventListener('click', (event) => {
+      if (this.isStayPhase || this.isDataReady) { return; }
       this.advanceSampleWord();
     });
   }
