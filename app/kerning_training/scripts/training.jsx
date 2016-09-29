@@ -10,6 +10,8 @@ import fontManager from 'font-manager';
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 import TrainingSampleTextView from './view/training_sample_text_view.jsx';
+import FontSelectorView from './view/font_selector_view.jsx';
+import FontWeightSelectorView from './view/font_weight_selector_view.jsx';
 
 import Util from '../../common/scripts/util.jsx';
 
@@ -95,6 +97,7 @@ class Training {
       this.advanceSampleWord();
     });
   }
+
   setTrainingText(testText, callback) {
     document.getElementsByClassName('kerning-training-field')[0].innerHTML = '';
     ReactDOM.render(
@@ -230,9 +233,20 @@ class Training {
       this.setTrainingTextCallback();
     });
   }
-  initFontSelector() {
+  initFontSelector(callback) {
     fontManager.getAvailableFonts((fonts) => {
-      console.log(fonts);
+      document.getElementsByClassName(
+        'font-selector-items')[0].innerHTML = '';
+      let fonts_sort_condition = (font1, font2) => {
+        if (font1.postscriptName < font2.postscriptName) { return -1; }
+        if (font1.postscriptName > font2.postscriptName) { return 1; }
+        return 0;
+      }
+      ReactDOM.render(
+        <FontSelectorView fonts={ fonts.sort(fonts_sort_condition) } />,
+        document.getElementsByClassName('font-selector')[0],
+        callback
+      );
     });
   }
 }

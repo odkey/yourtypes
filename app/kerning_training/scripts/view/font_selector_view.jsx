@@ -5,29 +5,31 @@
 
 import React from 'react';
 
-export default class fontSelectorView extends React.Component {
+export default class FontSelectorView extends React.Component {
   constructor(props) {
     super(props);
-    this.state = {
-      family: this.prpos.family,
-      path: this.props.path,
-      weight: this.props.weight
-    };
+    this.fonts = props.fonts;
   }
-  renderFontName() {
+  render() {
     const className = '';
+    let options = [];
+    this.fonts.forEach((element, index, array) => {
+      options.push(
+        <option key={ index } data-path={ element.path }
+              data-style={ element.style }
+              data-family={ element.family }
+              data-weight={ element.weight }
+              data-italic={ element.italic }
+              data-monospace={ element.monospace }
+              data-postscriptname={ element.postscriptName }>
+          { element.postscriptName }
+        </option>
+      );
+    });
     return (
-      <option value={ this.state.family } data-path={ this.props.path }>
-      { this.state.family }
-      </option>
-    );
-  }
-  renderFontWeight() {
-    const className = '';
-    return (
-      <option value={ this.state.weight }>
-      { this.state.weight }
-      </option>
+      <select className="font-selector-items" name="">
+        { options }
+      </select>
     );
   }
 }
