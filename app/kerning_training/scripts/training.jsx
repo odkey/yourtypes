@@ -25,6 +25,7 @@ class Training {
     }
     this.initFontSelector(() => {
       this.addFontSelectEvent();
+      this.applyFontToField();
     });
     this.kernedChars = [];
     this.result = {
@@ -260,6 +261,13 @@ class Training {
         callback
       );
     });
+  }
+  applyFontToField() {
+    let selector = document.getElementsByClassName('font-selector-items')[0];
+    let selected = selector.options[selector.selectedIndex];
+    console.log(selected);
+    this.setKerningFieldFontStyle(selected.dataset.postscriptname,
+                                  selected.dataset.path);
   }
   setKerningFieldFontStyle(name, path) {
     let className = 'additional-font-face-style-tag';
