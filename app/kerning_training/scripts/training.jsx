@@ -11,7 +11,6 @@ import * as ReactDOM from 'react-dom';
 import fontManager from 'font-manager';
 import TrainingSampleTextView from './view/training_sample_text_view.jsx';
 import FontSelectorView from './view/font_selector_view.jsx';
-import FontWeightSelectorView from './view/font_weight_selector_view.jsx';
 
 import Util from '../../common/scripts/util.jsx';
 
@@ -27,6 +26,7 @@ class Training {
       this.addFontSelectEvent();
       this.applyFontToField();
     });
+    // Result data
     this.kernedChars = [];
     this.result = {
       'values': new Array()
@@ -44,9 +44,16 @@ class Training {
     this.addUIEvents();
   }
   addUIEvents() {
+    this.addFontSizeInputEvent();
     this.addExportResultJSONEvent();
     this.addExportCharImagesEvent();
     this.addAdvanceSampleWordEvent();
+  }
+  addFontSizeInputEvent() {
+    let input = document.getElementsByName('font-size-input')[0];
+    input.addEventListener('change', (event) => {
+      this.setKerningFieldFontSize(event.target.value);
+    });
   }
   addFontSelectEvent() {
     let _this = this;
@@ -59,21 +66,21 @@ class Training {
     });
   }
   addExportResultJSONEvent() {
-    let button = document.getElementsByClassName('export-as-json')[0];
+    let button = document.getElementsByName('export-as-json')[0];
     button.addEventListener('click', (event) => {
       this.exportResultJSON();
     });
   }
   addExportCharImagesEvent() {
     let _this = this;
-    let button = document.getElementsByClassName('export-char-images')[0];
+    let button = document.getElementsByName('export-char-images')[0];
     button.addEventListener('click', (event) => {
       this.saveCharsAsImages();
     });
   }
   addAdvanceSampleWordEvent() {
     let _this = this;
-    let button = document.getElementsByClassName('kerning-training-ui-next')[0];
+    let button = document.getElementsByName('kerning-training-ui-next')[0];
     button.addEventListener('click', (event) => {
       this.advanceSampleWord();
     });
@@ -87,9 +94,12 @@ class Training {
     );
   }
   setTrainingTextCallback() {
+    // To add rendered chars to zip object
     this.prepareCharImageZip();
+    // To make the text draggable
     this.enableCharsToBeDragged();
-    this.prepareEmBoxRect();
+    // Initial font size of the kerning field is 50px
+    this.setKerningFieldFontSize(50);
   }
   prepareCharImageZip() {
     const container =
@@ -234,6 +244,11 @@ class Training {
     let field =
       document.getElementsByClassName('kerning-training-field-chars')[0];
     field.style.fontFamily = name;
+  }
+  setKerningFieldFontSize(size) {
+      let field =
+        document.getElementsByClassName('kerning-training-field-chars')[0];
+      field.style.fontSize = `${ size }px`;
   }
 }
 
