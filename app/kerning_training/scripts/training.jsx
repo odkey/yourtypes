@@ -51,6 +51,14 @@ class Training {
     this.addExportCharImagesEvent();
     this.addAdvanceSampleWordEvent();
     this.addKerningSamplingFinishEvent();
+    this.addMergingDensityIntoLetterSpaceEvent();
+  }
+  addMergingDensityIntoLetterSpaceEvent() {
+    let button =
+      document.getElementsByName('merge-density-into-letter-space')[0];
+    button.addEventListener('click', (event) => {
+      this.mergeDensitiesIntoLetterSpaceData();
+    });
   }
   addKerningSamplingFinishEvent() {
     let button = document.getElementsByName('finish-kerning-sampling')[0];
@@ -194,9 +202,6 @@ class Training {
       promises.push(merge(element, index));
     });
     promises.push(() => {
-      // let blob = new Blob([JSON.stringify(this.sampledData)],
-      //                     { type: 'application/json' });
-      // saveAs(blob, `${ this.sampledData.font.name }_merged_data.json`);
       console.log(this.result);
     });
     promises.reduce((prev, curr, index, array) => {
