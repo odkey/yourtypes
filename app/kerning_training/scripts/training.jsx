@@ -6,7 +6,7 @@
 require('babel-polyfill');
 import request from 'request';
 import JSZip from 'jszip';
-import FileServer from 'file-server';
+import fontManager from 'font-manager';
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 import TrainingSampleTextView from './view/training_sample_text_view.jsx';
@@ -19,6 +19,7 @@ class Training {
       isEmBoxShown: false,
       isBoundingBoxShown: false
     }
+    this.initFontSelector();
     this.kernedChars = [];
     this.result = {
       'values': new Array()
@@ -218,7 +219,6 @@ class Training {
       });
     };
   }
-
   advanceSampleWord() {
     this.prepareResultJSON();
     if (this.sampleWords.index == this.sampleWords.words.length-1) {
@@ -228,6 +228,11 @@ class Training {
     this.text = this.sampleWords.words[++this.sampleWords.index];
     this.setTrainingText(this.text, () => {
       this.setTrainingTextCallback();
+    });
+  }
+  initFontSelector() {
+    fontManager.getAvailableFonts((fonts) => {
+      console.log(fonts);
     });
   }
 }
