@@ -21,7 +21,9 @@ class Training {
       isEmBoxShown: false,
       isBoundingBoxShown: false
     }
+    // To make a dropbox contains all fonts your system has
     this.initFontSelector(() => {
+      // Followings are callback functions
       this.addFontSelectEvent();
       this.applyFontToField();
     });
@@ -42,8 +44,6 @@ class Training {
     this.addUIEvents();
   }
   addUIEvents() {
-    this.addEmBoxEvent();
-    this.addBoundingBoxEvent();
     this.addExportResultJSONEvent();
     this.addExportCharImagesEvent();
     this.addAdvanceSampleWordEvent();
@@ -56,38 +56,6 @@ class Training {
       let name = selected.dataset.postscriptname;
       let path = selected.dataset.path;
       this.setKerningFieldFontStyle(name, path);
-    });
-  }
-  addEmBoxEvent() {
-    let _this = this;
-    let check = document.getElementsByName('field-setting-em-box')[0];
-    check.addEventListener('change', (event) => {
-      _this.settings.isEmBoxShown = event.target.checked;
-      Util.toggleClass(
-        document.getElementsByClassName('kerning-training-field-chars')[0],
-        'hide-em-boxes');
-      if (_this.settings.isEmBoxShown) {
-
-      }
-      else {
-
-      }
-    });
-  }
-  addBoundingBoxEvent() {
-    let _this = this;
-    let check = document.getElementsByName('field-setting-bounding-box')[0];
-    check.addEventListener('change', (event) => {
-      _this.settings.isBoundingBoxShown = event.target.checked;
-      Util.toggleClass(
-        document.getElementsByClassName('kerning-training-field-chars')[0],
-        'hide-bounding-boxes');
-      if (_this.settings.isBoundingBoxShown) {
-
-      }
-      else {
-
-      }
     });
   }
   addExportResultJSONEvent() {
@@ -110,7 +78,6 @@ class Training {
       this.advanceSampleWord();
     });
   }
-
   setTrainingText(testText, callback) {
     document.getElementsByClassName('kerning-training-field')[0].innerHTML = '';
     ReactDOM.render(
@@ -123,7 +90,6 @@ class Training {
     this.prepareCharImageZip();
     this.enableCharsToBeDragged();
     this.prepareEmBoxRect();
-    console.log(this.zip);
   }
   prepareCharImageZip() {
     const container =
@@ -168,17 +134,6 @@ class Training {
       });
     });
   }
-  prepareEmBoxRect() {
-    const container =
-      document.getElementsByClassName('kerning-training-field-chars')[0];
-    let chars = container.childNodes;
-    chars.forEach((element, index, array) => {
-      element.emBoxGeo = {
-        width: element.getClientRects()[0].width,
-        height: element.getClientRects()[0].height
-      }
-    });
-  }
   prepareResultJSON() {
     const container =
       document.getElementsByClassName('kerning-training-field-chars')[0];
@@ -205,8 +160,6 @@ class Training {
     let blob =
       new Blob([JSON.stringify(this.result)], { type: 'application/json' });
       saveAs(blob, filepath);
-  }
-  saveResultJson() {
   }
   saveCharsAsImages() {
     const folder =
