@@ -4,24 +4,28 @@
 'use strict';
 
 require('babel-polyfill');
-import request from 'request';
+// import request from 'request';
 import JSZip from 'jszip';
-import fontManager from 'font-manager';
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
+import fontManager from 'font-manager';
 import TrainingSampleTextView from './view/training_sample_text_view.jsx';
 import FontSelectorView from './view/font_selector_view.jsx';
 import FontWeightSelectorView from './view/font_weight_selector_view.jsx';
 
 import Util from '../../common/scripts/util.jsx';
 
+let self;
 class Training {
   constructor() {
+    self = this;
     this.settings = {
       isEmBoxShown: false,
       isBoundingBoxShown: false
     }
-    this.initFontSelector();
+    this.initFontSelector(() => {
+      this.addFontSelectEvent();
+    });
     this.kernedChars = [];
     this.result = {
       'values': new Array()
@@ -44,6 +48,16 @@ class Training {
     this.addExportResultJSONEvent();
     this.addExportCharImagesEvent();
     this.addAdvanceSampleWordEvent();
+  }
+  addFontSelectEvent() {
+    let _this = this;
+    let selector = document.getElementsByClassName('font-selector-items')[0];
+    selector.addEventListener('change', (event) => {
+      let selected = selector.options[selector.selectedIndex];
+      let name = selected.dataset.postscriptname;
+      let path = selected.dataset.path;
+      this.setKerningFieldFontStyle(name, path);
+    });
   }
   addEmBoxEvent() {
     let _this = this;
@@ -235,8 +249,6 @@ class Training {
   }
   initFontSelector(callback) {
     fontManager.getAvailableFonts((fonts) => {
-      document.getElementsByClassName(
-        'font-selector-items')[0].innerHTML = '';
       let fonts_sort_condition = (font1, font2) => {
         if (font1.postscriptName < font2.postscriptName) { return -1; }
         if (font1.postscriptName > font2.postscriptName) { return 1; }
@@ -248,6 +260,18 @@ class Training {
         callback
       );
     });
+  }
+  setKerningFieldFontStyle(name, path) {
+    let style = document.createElement('style');
+    style.appendChild(document.createTextNode(
+      `@font-face {
+         font-family: ${ name };
+         src: url(${ path });
+       }`));
+    document.head.appendChild(style);
+    let field =
+      document.getElementsByClassName('kerning-training-field-chars')[0];
+    field.style.fontFamily = name;
   }
 }
 
