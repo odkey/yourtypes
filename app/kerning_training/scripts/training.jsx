@@ -21,6 +21,10 @@ class Training {
       isBoundingBoxShown: false
     }
     this.isTextRendered = false;
+    this.isImagesStored = false;
+    this.isDraggable = false;
+    this.isFontSet = false;
+    this.isSizeSet = false;
     this.isStayPhase = true;
     this.isDataReady = false;
     this.isDataAnalysed = false;
@@ -30,7 +34,9 @@ class Training {
       // Followings are callback functions
       this.addFontSelectEvent();
       this.applyFontToField();
+      this.setKerningFieldFontSize(50);
     });
+    // To set font size
     // Result data
     this.kernedChars = new Array();
     this.result = {
@@ -45,9 +51,6 @@ class Training {
       index: 0
     }
     this.text = this.sampleWords.words[this.sampleWords.index];
-    // this.setTrainingText(this.text, () => {
-    //   this.setTrainingTextCallback()
-    // });
     this.setTrainingText(this.text, () => {
       this.enableCharsToBeDragged();
     });
@@ -99,7 +102,6 @@ class Training {
     button.addEventListener('click', (event) => {
       if (this.isStayPhase) { return; }
       this.prepareResultJSON();
-      // this.analyseCharDensities();
       let timeout1 = setTimeout(() => {
         if (this.isDataReady) {
           this.analyseCharDensities();
@@ -154,10 +156,9 @@ class Training {
     });
   }
   addAdvanceSampleWordEvent() {
-    let _this = this;
-    let button = document.getElementsByName('kerning-training-ui-next')[0];
+    let button = document.getElementsByName('sampling-ui-next')[0];
     button.addEventListener('click', (event) => {
-      if (this.isStayPhase) { return; }
+      if (this.isStayPhase) { console.log('aaa');return; }
       this.advanceSampleWord();
     });
   }
@@ -185,6 +186,7 @@ class Training {
   }
   storeCharImages() {
     this.isTextRendered = false;
+    this.isImagesStored = false;
     const container =
       document.getElementsByClassName('kerning-training-field-chars')[0];
     let chars = container.childNodes;
@@ -201,7 +203,10 @@ class Training {
           };
           this.images.push(object);
           runningCount++;
-          if (runningCount == array.length) { this.isTextRendered = true; }
+          if (runningCount == array.length) {
+            this.isImagesStored = true;
+            this.isTextRendered = this.is_text_rendered();
+          }
         }
       });
     });
@@ -296,6 +301,7 @@ class Training {
   }
   enableCharsToBeDragged() {
     this.isTextRendered = false;
+    this.isDraggable = false;
     const container =
       document.getElementsByClassName('kerning-training-field-chars')[0];
     let chars = container.childNodes;
@@ -303,33 +309,42 @@ class Training {
     chars.forEach((element, index, array) => {
       if (index == 0) {
         runningCount++;
-        return;
       }
-      element.dragging = false;
-      // Make drag events to each span elements
-      element.addEventListener('mousedown', () => {
-        element.dragging = true;
-        element.pivot = element.clientX;
-      });
-      element.addEventListener('mouseup', () => {
+      else {
         element.dragging = false;
-        element.pivot = undefined;
-      });
-      element.addEventListener('mouseout', () => {
-        element.dragging = false;
-        element.pivot = undefined;
-      });
-      element.addEventListener('mousemove',(event) => {
-        if (element.dragging) {
-          const previous = array[index-1];
-          let letterSpace = parseInt(previous.style.letterSpacing, 10);
-            letterSpace += (event.clientX - element.pivot);
-          previous.style.letterSpacing = letterSpace + 'px';
-          element.pivot = event.clientX;
-        }
-      });
-      runningCount++;
-      if (runningCount == array.length) { this.isTextRendered = true; }
+        // Make drag events to each span elements
+        element.addEventListener('mousedown', () => {
+          console.log(this.isDraggable, this.isImagesStored, this.isSizeSet, this.isFontSet);
+          if (!this.isTextRendered || this.isStayPhase) { return; }
+          element.dragging = true;
+          element.pivot = element.clientX;
+        });
+        element.addEventListener('mouseup', () => {
+          if (!this.isTextRendered || this.isStayPhase) { return; }
+          element.dragging = false;
+          element.pivot = undefined;
+        });
+        element.addEventListener('mouseout', () => {
+          if (!this.isTextRendered || this.isStayPhase) { return; }
+          element.dragging = false;
+          element.pivot = undefined;
+        });
+        element.addEventListener('mousemove',(event) => {
+          if (!this.isTextRendered || this.isStayPhase) { return; }
+          if (element.dragging) {
+            const previous = array[index-1];
+            let letterSpace = parseInt(previous.style.letterSpacing, 10);
+              letterSpace += (event.clientX - element.pivot);
+            previous.style.letterSpacing = letterSpace + 'px';
+            element.pivot = event.clientX;
+          }
+        });
+        runningCount++;
+      }
+      if (runningCount == array.length) {
+        this.isDraggable = true;
+        this.isTextRendered = this.is_text_rendered();
+      }
     });
   }
   prepareResultJSON() {
@@ -417,15 +432,33 @@ class Training {
     };
   }
   advanceSampleWord() {
+    this.isTextRendered = false;
     this.prepareResultJSON();
-    if (this.sampleWords.index == this.sampleWords.words.length-1) {
-      this.sampleWords.index = -1;
-      // Add event!!
-    }
-    this.text = this.sampleWords.words[++this.sampleWords.index];
-    this.setTrainingText(this.text, () => {
-      this.setTrainingTextCallback();
-    });
+    let timeout1 = setTimeout(() => {
+      if (this.isDataReady) {
+        clearTimeout(timeout1);
+        if (this.sampleWords.index == this.sampleWords.words.length-1) {
+          this.text = '';
+          this.setTrainingText(this.text, () => { this.isTextRendered = true;});
+        }
+        else {
+          let fontsize =
+            document.getElementsByName('font-size-input')[0].value;
+          this.text = this.sampleWords.words[++this.sampleWords.index];
+          this.setTrainingText(this.text, () => {
+            this.enableCharsToBeDragged();
+            this.applyFontToField();
+            this.setKerningFieldFontSize(fontsize);
+          });
+          let timeout2 = setTimeout(() => {
+            if (this.isTextRendered) {
+              clearTimeout(timeout2);
+              this.storeCharImages();
+            }
+          }, 100);
+        }
+      }
+    }, 100);
   }
   initFontSelector(callback) {
     fontManager.getAvailableFonts((fonts) => {
@@ -449,6 +482,7 @@ class Training {
   }
   setKerningFieldFontStyle(name, path) {
     this.isTextRendered = false;
+    this.isFontSet = false;
     let className = 'additional-font-face-style-tag';
     Util.deleteElementWithClassName(className);
     let style = document.createElement('style');
@@ -462,14 +496,21 @@ class Training {
     let field =
       document.getElementsByClassName('kerning-training-field-chars')[0];
     field.style.fontFamily = name;
-    this.isTextRendered = true;
+    this.isFontSet = true;
+    this.isTextRendered = this.is_text_rendered();
   }
   setKerningFieldFontSize(size) {
     this.isTextRendered = false;
+    this.isSizeSet = false;
     let field =
       document.getElementsByClassName('kerning-training-field-chars')[0];
     field.style.fontSize = `${ size }px`;
-    this.isTextRendered = true;
+    this.isSizeSet = true;
+    this.isTextRendered = this.is_text_rendered();
+  }
+  is_text_rendered() {
+    return this.isFontSet && this.isSizeSet &&
+           this.isDraggable && this.isImagesStored;
   }
 }
 
