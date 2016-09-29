@@ -18,4 +18,19 @@ export default class Util {
     }
     element.className = classString;
   }
+  static deleteElementWithClassName(className, index) {
+    if (!(index >= 0)) { index = 0; }
+    let element = document.getElementsByClassName(className)[index];
+    if (!element) { return; }
+    let parent = element.parentNode;
+    parent.removeChild(element);
+  }
+  static deleteElementsWithClassName(className) {
+    let elemnts = document.getElementsByClassName(className);
+    if (!elements) { return; }
+    let parent = elements[0].parentNode;
+    elements.forEach((element) => {
+      parent.removeChild(element);
+    });
+  }
 }

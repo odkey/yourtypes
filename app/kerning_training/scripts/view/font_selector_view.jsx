@@ -15,13 +15,14 @@ export default class FontSelectorView extends React.Component {
     let options = [];
     this.fonts.forEach((element, index, array) => {
       options.push(
-        <option key={ index } data-path={ element.path }
-              data-style={ element.style }
-              data-family={ element.family }
-              data-weight={ element.weight }
-              data-italic={ element.italic }
-              data-monospace={ element.monospace }
-              data-postscriptname={ element.postscriptName }>
+        <option key={ index }
+                data-path={ element.path }
+                data-style={ element.style }
+                data-family={ element.family }
+                data-weight={ element.weight }
+                data-italic={ element.italic }
+                data-monospace={ element.monospace }
+                data-postscriptname={ element.postscriptName }>
           { element.postscriptName }
         </option>
       );

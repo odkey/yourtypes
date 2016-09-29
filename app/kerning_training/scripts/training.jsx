@@ -187,8 +187,8 @@ class Training {
     chars.forEach((element, index, array) => {
       if (index == array.length-1) { return; }
       this.result.values.push({
-        'first_char': element.innerText,
-        'second_char': array[index+1].innerText,
+        'first_char': element.textContent,
+        'second_char': array[index+1].textContent,
         'kerning_value': parseInt(element.style['letter-spacing'].substr('px'))
       });
       console.log(this.result);
@@ -227,7 +227,7 @@ class Training {
             let options = {
               base64: true
             };
-            this.zip.file(`${ element.innerText }.png`,
+            this.zip.file(`${ element.textContent }.png`,
                      savable.src.split(',')[1],
                      options);
             resolve();
@@ -262,7 +262,10 @@ class Training {
     });
   }
   setKerningFieldFontStyle(name, path) {
+    let className = 'additional-font-face-style-tag';
+    Util.deleteElementWithClassName(className);
     let style = document.createElement('style');
+    style.className = className;
     style.appendChild(document.createTextNode(
       `@font-face {
          font-family: ${ name };
