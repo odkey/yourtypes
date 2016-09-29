@@ -27,17 +27,19 @@ class Training {
       this.applyFontToField();
     });
     // Result data
-    this.kernedChars = [];
+    this.kernedChars = new Array();
     this.result = {
       'values': new Array()
     };
+    // Char images
+    this.images = new Array();
+    this.densities = undefined;
     this.zip = new JSZip();
     this.sampleWords = {
       words: require('../../data/sample_text/kumo_no_ito/data.json')["words"],
       index: 0
     }
     this.text = this.sampleWords.words[this.sampleWords.index];
-    console.log('main', this.text);
     this.setTrainingText(this.text, () => {
       this.setTrainingTextCallback()
     });
@@ -48,6 +50,13 @@ class Training {
     this.addExportResultJSONEvent();
     this.addExportCharImagesEvent();
     this.addAdvanceSampleWordEvent();
+    this.addKerningSamplingFinishEvent();
+  }
+  addKerningSamplingFinishEvent() {
+    let button = document.getElementsByName('finish-kerning-sampling')[0];
+    button.addEventListener('click', (event) => {
+      this.analyseCharDensities();
+    });
   }
   addFontSizeInputEvent() {
     let input = document.getElementsByName('font-size-input')[0];
@@ -94,12 +103,76 @@ class Training {
     );
   }
   setTrainingTextCallback() {
+    // To store chars as images
+    this.storeCharImages();
+    // this.analyseCharImages();
     // To add rendered chars to zip object
     this.prepareCharImageZip();
     // To make the text draggable
     this.enableCharsToBeDragged();
     // Initial font size of the kerning field is 50px
-    this.setKerningFieldFontSize(50);
+    // this.setKerningFieldFontSize(50);
+  }
+  storeCharImages() {
+    const container =
+      document.getElementsByClassName('kerning-training-field-chars')[0];
+    let chars = container.childNodes;
+    // this.images = chars.cloneNode(true);
+    chars.forEach((element, index) => {
+      html2canvas(element, {
+        onrendered: (canvas) => {
+          let image = new Image();
+          image.src = canvas.toDataURL();
+          let object = {
+            img: image,
+            char: element.textContent
+          };
+          this.images.push(object);
+        }
+      });
+    });
+  }
+  analyseCharDensities() {
+    console.log('Start to analying char densities.');
+    this.densities = {};
+    this.images.forEach((element, index) => {
+      let canvas = document.createElement('canvas');
+      if (!canvas || !canvas.getContext) {
+        console.log('error: canvas is not found');
+        return;
+      }
+      let image = new Image();
+      let context = canvas.getContext('2d');
+      image.src = `${ element.img.src }`;
+      image.onload = () => {
+        context.drawImage(image, 0, 0, image.width, image.height);
+        let imageData =
+          context.getImageData(0, 0, image.width, image.height);
+        let pixels = imageData.data;
+        let sumBlack = 0;
+        let density = 0;
+        let sum_up = (element, index) => {
+          return () => {
+            return new Promise((resolve, reject) => {
+              sumBlack += element/255.0;
+              resolve();
+            });
+          }
+        }
+        let promises = [];
+        pixels.forEach((element, index) => {
+          if (index%4 != 3) { return; }
+          promises.push(sum_up(element, index));
+        });
+        promises.push(() => {
+          density = sumBlack / (image.width*image.height);
+          this.densities[element.char] = density;
+        });
+        promises.reduce((prev, curr, index, array) => {
+          return prev.then(curr);
+        }, Promise.resolve());
+      }
+    });
   }
   prepareCharImageZip() {
     const container =
@@ -182,7 +255,7 @@ class Training {
       filename =
         `yourtypes-${ this.result.info.postscript_name }`;
     }
-    console.log(filename);
+
     let blob =
       new Blob([JSON.stringify(this.result)], { type: 'application/json' });
       saveAs(blob, filename);
@@ -242,7 +315,6 @@ class Training {
   applyFontToField() {
     let selector = document.getElementsByClassName('font-selector-items')[0];
     let selected = selector.options[selector.selectedIndex];
-    console.log(selected);
     this.setKerningFieldFontStyle(selected.dataset.postscriptname,
                                   selected.dataset.path);
   }
