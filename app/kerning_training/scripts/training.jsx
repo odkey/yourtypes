@@ -185,6 +185,8 @@ class Training {
   }
   mergeDensitiesIntoLetterSpaceData() {
     console.log('Start to merge density data into letter space data.');
+    let fontsize =
+      parseFloat(document.getElementsByName('font-size-input')[0].value);
     let merge = (element, index) => {
       return () => {
         return new Promise((resolve, reject) => {
@@ -192,6 +194,8 @@ class Training {
           let secondDensity = this.densities[element['second_char']];
           element['first_density'] = firstDensity;
           element['second_density'] = secondDensity;
+          element['letter_space'] = element['kerning_value'];
+          element['letter_space_rate'] = element['kerning_value']/fontsize;
           console.log(element);
           resolve();
         });
@@ -267,10 +271,14 @@ class Training {
     });
   }
   exportResultJSON() {
+    let size =
+      document.getElementsByName('font-size-input')[0].value;
+    console.log(size);
     let fontSelector =
       document.getElementsByClassName('font-selector-items')[0];
     let selected = fontSelector.options[fontSelector.selectedIndex];
     this.result['info'] = {
+      size: size,
       path: selected.dataset.path,
       style: selected.dataset.style,
       family: selected.dataset.family,
