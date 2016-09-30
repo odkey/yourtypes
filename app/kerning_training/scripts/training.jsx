@@ -26,9 +26,13 @@ class Training {
     this.isFontSet = false;
     this.isSizeSet = false;
     this.isStayPhase = true;
-    this.isDataReady = false;
+    this.isDataPrepared = false;
     this.isDataAnalysed = false;
     this.isDataMerged = false;
+    this.isDataMerging = false;
+    this.isDataAnalysing = false;
+    this.isImagesStoring = false;
+    this.isDataPreparing = false;
     // To make a dropbox contains all fonts your system has
     this.initFontSelector(() => {
       // Followings are callback functions
@@ -55,6 +59,22 @@ class Training {
       this.enableCharsToBeDragged();
     });
     this.addUIEvents();
+    // When some process is running, loading curtain is drawn to reject user input
+    let interval = setInterval(() => {
+      console.log('set font', this.isFontSet,
+                  'set size', this.isSizeSet,
+                  'draggable', this.isDraggable);
+      let curtain = document.getElementsByClassName('loading-curtain')[0];
+      if (this.is_operation_allowed()) {
+        Util.addClass(curtain, 'hidden');
+        // console.log('Loading curtain is hidden');
+      }
+      else {
+        Util.removeClass(curtain, 'hidden');
+        // console.log('Loading curtain is drawn');
+      }
+    }, 10);
+
   }
   addUIEvents() {
     this.addFontSizeInputEvent();
@@ -74,13 +94,14 @@ class Training {
       this.resetData();
       this.isStayPhase = false;
       this.storeCharImages();
-      let timeout = setTimeout(() => {
+      let interval = setInterval(() => {
+        console.log('start');
         if (this.isTextRendered) {
           this.isStayPhase = false;
           console.log('Those chars are stored.', this.images);
-          clearTimeout(timeout);
+          clearInterval(interval);
         }
-      }, 100);
+      }, 10);
     });
   }
   resetData() {
@@ -94,7 +115,7 @@ class Training {
     button.addEventListener('click', (event) => {
       if (!this.isStayPhase) { return; }
       this.mergeDensitiesIntoLetterSpaceData();
-      this.isDataReady = true;
+      this.isDataPrepared = true;
     });
   }
   addKerningSamplingFinishEvent() {
@@ -102,22 +123,22 @@ class Training {
     button.addEventListener('click', (event) => {
       if (this.isStayPhase) { return; }
       this.prepareResultJSON();
-      let timeout1 = setTimeout(() => {
-        if (this.isDataReady) {
+      let interval1 = setInterval(() => {
+        if (this.isDataPrepared) {
           this.analyseCharDensities();
-          let timeout2 = setTimeout(() => {
+          let interval2 = setInterval(() => {
             if (this.isDataAnalysed) {
               this.mergeDensitiesIntoLetterSpaceData();
-              let timeout3 = setTimeout(() => {
+              let interval3 = setInterval(() => {
                 if (this.isDataMerged) {
                   this.isStayPhase = true;
-                  clearTimeout(timeout3);
+                  clearInterval(interval3);
                 }
               }, 100);
-              clearTimeout(timeout2);
+              clearInterval(interval2);
             }
           }, 100);
-          clearTimeout(timeout1);
+          clearInterval(interval1);
         }
       }, 100);
     });
@@ -143,7 +164,11 @@ class Training {
   addExportResultJSONEvent() {
     let button = document.getElementsByName('export-as-json')[0];
     button.addEventListener('click', (event) => {
-      if (!this.isStayPhase) { return; }
+      console.log(this.isImagesStored, this.isDraggable,
+                  this.isFontSet,this.isSizeSet);
+      if (!this.isStayPhase ||
+          !this.isImagesStored ||
+          !this.isDataPrepared) { return; }
       this.exportResultJSON();
     });
   }
@@ -187,6 +212,7 @@ class Training {
   storeCharImages() {
     this.isTextRendered = false;
     this.isImagesStored = false;
+    this.isImagesStoring = true;
     const container =
       document.getElementsByClassName('kerning-training-field-chars')[0];
     let chars = container.childNodes;
@@ -204,6 +230,7 @@ class Training {
           this.images.push(object);
           runningCount++;
           if (runningCount == array.length) {
+            this.isImagesStoring = false;
             this.isImagesStored = true;
             this.isTextRendered = this.is_text_rendered();
           }
@@ -214,6 +241,7 @@ class Training {
   analyseCharDensities() {
     console.log('Start to analying char densities.');
     this.isDataAnalysed = false;
+    this.isDataAnalysing = true;
     this.densities = {};
     this.images.forEach((element, index) => {
       let canvas = document.createElement('canvas');
@@ -248,6 +276,7 @@ class Training {
           density = sumBlack / (image.width*image.height);
           this.densities[element.char] = density;
           this.isDataAnalysed = true;
+          this.isDataAnalysing = false;
         });
         promises.reduce((prev, curr, index, array) => {
           return prev.then(curr);
@@ -258,6 +287,7 @@ class Training {
   mergeDensitiesIntoLetterSpaceData() {
     console.log('Start to merge density data into letter space data.');
     this.isDataMerged = false;
+    this.isDataMerging = true;
     let fontsize =
       parseFloat(document.getElementsByName('font-size-input')[0].value);
     let merge = (element, index) => {
@@ -281,6 +311,7 @@ class Training {
     promises.push(() => {
       console.log('Data is merged', this.result);
       this.isDataMerged = true;
+      this.isDataMerging = false;
     });
     promises.reduce((prev, curr, index, array) => {
       return prev.then(curr);
@@ -347,9 +378,10 @@ class Training {
       }
     });
   }
+  // To push chars now drawn
   prepareResultJSON() {
     console.log('Start to prepare result JSON');
-    this.isDataReady = false;
+    this.isDataPrepared = false;
     const container =
       document.getElementsByClassName('kerning-training-field-chars')[0];
     let chars = container.childNodes;
@@ -367,14 +399,14 @@ class Training {
         runningCount++;
       }
       if (runningCount == array.length) {
-        this.isDataReady = true;
+        this.isDataPrepared = true;
       }
     });
   }
   exportResultJSON() {
+    console.log('Is operation allowed', this.is_operation_allowed());
     let size =
       document.getElementsByName('font-size-input')[0].value;
-    console.log(size);
     let fontSelector =
       document.getElementsByClassName('font-selector-items')[0];
     let selected = fontSelector.options[fontSelector.selectedIndex];
@@ -434,12 +466,14 @@ class Training {
   advanceSampleWord() {
     this.isTextRendered = false;
     this.prepareResultJSON();
-    let timeout1 = setTimeout(() => {
-      if (this.isDataReady) {
-        clearTimeout(timeout1);
+    let interval1 = setInterval(() => {
+      if (this.isDataPrepared) {
+        clearInterval(interval1);
         if (this.sampleWords.index == this.sampleWords.words.length-1) {
           this.text = '';
-          this.setTrainingText(this.text, () => { this.isTextRendered = true;});
+          this.setTrainingText(this.text, () => {
+            this.isTextRendered = this.is_text_rendered();
+          });
         }
         else {
           let fontsize =
@@ -450,9 +484,9 @@ class Training {
             this.applyFontToField();
             this.setKerningFieldFontSize(fontsize);
           });
-          let timeout2 = setTimeout(() => {
+          let interval2 = setInterval(() => {
             if (this.isTextRendered) {
-              clearTimeout(timeout2);
+              clearInterval(interval2);
               this.storeCharImages();
             }
           }, 100);
@@ -481,8 +515,10 @@ class Training {
                                   selected.dataset.path);
   }
   setKerningFieldFontStyle(name, path) {
+
     this.isTextRendered = false;
     this.isFontSet = false;
+    console.log('applying font', this.isTextRendered);
     let className = 'additional-font-face-style-tag';
     Util.deleteElementWithClassName(className);
     let style = document.createElement('style');
@@ -509,8 +545,12 @@ class Training {
     this.isTextRendered = this.is_text_rendered();
   }
   is_text_rendered() {
-    return this.isFontSet && this.isSizeSet &&
-           this.isDraggable && this.isImagesStored;
+    return this.isFontSet && this.isSizeSet && this.isDraggable;
+  }
+  is_operation_allowed() {
+    return !this.isDataPreparing && !this.isDataMerging &&
+           !this.isDataAnalysing && !this.isImagesStoring &&
+           this.is_text_rendered();
   }
 }
 

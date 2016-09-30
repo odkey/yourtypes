@@ -18,6 +18,26 @@ export default class Util {
     }
     element.className = classString;
   }
+  static addClass(element, className){
+    if (!element || !className){ return; }
+    let classString = element.className;
+    const nameIndex = classString.indexOf(className);
+    if (nameIndex == -1) {
+      classString += ' ' + className;
+    }
+    element.className = classString;
+  }
+  static removeClass(element, className){
+    if (!element || !className){ return; }
+    let classString = element.className;
+    const nameIndex = classString.indexOf(className);
+    if (nameIndex != -1) {
+      classString =
+        classString.substr(0, nameIndex) +
+        classString.substr(nameIndex+className.length);
+    }
+    element.className = classString;
+  }
   static deleteElementWithClassName(className, index) {
     if (!(index >= 0)) { index = 0; }
     let element = document.getElementsByClassName(className)[index];
