@@ -7,5 +7,6 @@ div.loading-curtain {
   top: 0;
   left: 0;
   background-color: rgba(20, 20, 20, 0.8); }
-  div.loading-curtain.hidden {
-    display: none; }
+
+div.hidden {
+  display: none; }

@@ -108,7 +108,7 @@ class Training {
     this.isDataPreparing = false;
   }
   addKerningSamplingFinishEvent() {
-    let button = document.getElementsByName('finish-kerning-sampling')[0];
+    let button = document.getElementsByName('sampling-ui-finish')[0];
     button.addEventListener('click', (event) => {
       // Init text
       let fontsize =
@@ -124,7 +124,6 @@ class Training {
       });
     });
   }
-
   addFontSizeInputEvent() {
     let input = document.getElementsByName('font-size-input')[0];
     input.addEventListener('change', (event) => {
