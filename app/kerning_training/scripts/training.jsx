@@ -16,6 +16,7 @@ import Util from '../../common/scripts/util.jsx';
 
 class Training {
   constructor() {
+    // Status
     this.isTextRendered = false;
     this.isImagesStored = false;
     this.isDraggable = false;
@@ -36,7 +37,6 @@ class Training {
       this.applyFontToField();
       this.setKerningFieldFontSize(50);
     });
-    // To set font size
     // Result data
     this.kernedChars = new Array();
     this.result = {
@@ -79,8 +79,14 @@ class Training {
         Util.toggleClass(this.nextButtonWrapper, 'hidden');
         Util.toggleClass(this.exportJSONButtonWrapper, 'hidden');
         Util.toggleClass(this.exportImagesButtonWrapper, 'hidden');
-        this.isStayPhase?
-          this.enableFontSelector(): this.disableFontSelector();
+        if (this.isStayPhase) {
+          this.enableFontSelector();
+          this.enableFontSizeInput();
+        }
+        else {
+          this.disableFontSelector();
+          this.disableFontSizeInput();
+        }
       }
       this.isLastPhaseStay = this.isStayPhase;
     }, 5);
@@ -597,6 +603,18 @@ class Training {
       document.getElementsByName('font-selector')[0];
     if (selector == undefined) { return; }
     selector.disabled = false;
+  }
+  disableFontSizeInput() {
+    let input =
+      document.getElementsByName('font-size-input')[0];
+    if (input == undefined) { return; }
+    input.disabled = true;
+  }
+  enableFontSizeInput() {
+    let input =
+      document.getElementsByName('font-size-input')[0];
+    if (input == undefined) { return; }
+    input.disabled = false;
   }
   is_text_rendered() {
     return this.isFontSet && this.isSizeSet && this.isDraggable;
