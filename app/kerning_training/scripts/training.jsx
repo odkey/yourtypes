@@ -60,20 +60,14 @@ class Training {
     });
     this.addUIEvents();
     // When some process is running, loading curtain is drawn to reject user input
+    this.curtain =
+      document.getElementsByClassName('loading-curtain')[0];
     let interval = setInterval(() => {
-      console.log('set font', this.isFontSet,
-                  'set size', this.isSizeSet,
-                  'draggable', this.isDraggable);
-      let curtain = document.getElementsByClassName('loading-curtain')[0];
       if (this.is_operation_allowed()) {
-        Util.addClass(curtain, 'hidden');
-        // console.log('Loading curtain is hidden');
+        Util.addClass(this.curtain, 'hidden');
+        // clearInterval(interval);
       }
-      else {
-        Util.removeClass(curtain, 'hidden');
-        // console.log('Loading curtain is drawn');
-      }
-    }, 10);
+    }, 5);
 
   }
   addUIEvents() {
@@ -82,7 +76,6 @@ class Training {
     this.addExportCharImagesEvent();
     this.addAdvanceSampleWordEvent();
     this.addKerningSamplingFinishEvent();
-    this.addMergingDensityIntoLetterSpaceEvent();
 
     this.addSamplingStartEvent();
   }
@@ -91,11 +84,13 @@ class Training {
       document.getElementsByName('sampling-ui-start')[0];
     button.addEventListener('click', (event) => {
       if (!this.isStayPhase) { return; }
+      // Start to draw loading curtain
+      Util.removeClass(this.curtain, 'hidden');
+
       this.resetData();
       this.isStayPhase = false;
       this.storeCharImages();
       let interval = setInterval(() => {
-        console.log('start');
         if (this.isTextRendered) {
           this.isStayPhase = false;
           console.log('Those chars are stored.', this.images);
@@ -105,44 +100,31 @@ class Training {
     });
   }
   resetData() {
+    this.isDataPrepared = false;
+    this.isDataPreparing = true;
     this.result = { values: new Array() };
     this.images = new Array();
     this.densities = undefined;
-  }
-  addMergingDensityIntoLetterSpaceEvent() {
-    let button =
-      document.getElementsByName('merge-density-into-letter-space')[0];
-    button.addEventListener('click', (event) => {
-      if (!this.isStayPhase) { return; }
-      this.mergeDensitiesIntoLetterSpaceData();
-      this.isDataPrepared = true;
-    });
+    this.isDataPreparing = false;
   }
   addKerningSamplingFinishEvent() {
     let button = document.getElementsByName('finish-kerning-sampling')[0];
     button.addEventListener('click', (event) => {
-      if (this.isStayPhase) { return; }
-      this.prepareResultJSON();
-      let interval1 = setInterval(() => {
-        if (this.isDataPrepared) {
-          this.analyseCharDensities();
-          let interval2 = setInterval(() => {
-            if (this.isDataAnalysed) {
-              this.mergeDensitiesIntoLetterSpaceData();
-              let interval3 = setInterval(() => {
-                if (this.isDataMerged) {
-                  this.isStayPhase = true;
-                  clearInterval(interval3);
-                }
-              }, 100);
-              clearInterval(interval2);
-            }
-          }, 100);
-          clearInterval(interval1);
-        }
-      }, 100);
+      // Init text
+      let fontsize =
+        document.getElementsByName('font-size-input')[0].value;
+      this.sampleWords.index = 0;
+      this.text = this.sampleWords.words[this.sampleWords.index];
+      this.setTrainingText(this.text, () => {
+        this.enableCharsToBeDragged();
+        this.applyFontToField();
+        this.setKerningFieldFontSize(fontsize);
+        // Preparing to export text
+        this.finishSsmpling();
+      });
     });
   }
+
   addFontSizeInputEvent() {
     let input = document.getElementsByName('font-size-input')[0];
     input.addEventListener('change', (event) => {
@@ -155,6 +137,7 @@ class Training {
     let selector = document.getElementsByClassName('font-selector-items')[0];
     selector.addEventListener('change', (event) => {
       if (!this.isStayPhase) { return; }
+      this.isFontSet = false;
       let selected = selector.options[selector.selectedIndex];
       let name = selected.dataset.postscriptname;
       let path = selected.dataset.path;
@@ -183,7 +166,7 @@ class Training {
   addAdvanceSampleWordEvent() {
     let button = document.getElementsByName('sampling-ui-next')[0];
     button.addEventListener('click', (event) => {
-      if (this.isStayPhase) { console.log('aaa');return; }
+      Util.removeClass(this.curtain, 'hidden');
       this.advanceSampleWord();
     });
   }
@@ -209,6 +192,32 @@ class Training {
     // Initial font size of the kerning field is 50px
     // this.setKerningFieldFontSize(50);
   }
+  finishSsmpling() {
+    if (this.isStayPhase) { return; }
+    this.isDataPreparing = true;
+    this.isDataAnalysing = true;
+    this.isDataMerging = true;
+    Util.removeClass(this.curtain, 'hidden');
+    this.prepareResultJSON();
+    let interval1 = setInterval(() => {
+      if (this.isDataPrepared) {
+        this.analyseCharDensities();
+        let interval2 = setInterval(() => {
+          if (this.isDataAnalysed) {
+            this.mergeDensitiesIntoLetterSpaceData();
+            let interval3 = setInterval(() => {
+              if (this.isDataMerged) {
+                this.isStayPhase = true;
+                clearInterval(interval3);
+              }
+            }, 100);
+            clearInterval(interval2);
+          }
+        }, 100);
+        clearInterval(interval1);
+      }
+    }, 100);
+  }
   storeCharImages() {
     this.isTextRendered = false;
     this.isImagesStored = false;
@@ -216,7 +225,6 @@ class Training {
     const container =
       document.getElementsByClassName('kerning-training-field-chars')[0];
     let chars = container.childNodes;
-    // this.images = chars.cloneNode(true);
     let runningCount = 0;
     chars.forEach((element, index, array) => {
       html2canvas(element, {
@@ -243,6 +251,7 @@ class Training {
     this.isDataAnalysed = false;
     this.isDataAnalysing = true;
     this.densities = {};
+    this.runningCount = 0;
     this.images.forEach((element, index) => {
       let canvas = document.createElement('canvas');
       if (!canvas || !canvas.getContext) {
@@ -275,8 +284,12 @@ class Training {
         promises.push(() => {
           density = sumBlack / (image.width*image.height);
           this.densities[element.char] = density;
-          this.isDataAnalysed = true;
-          this.isDataAnalysing = false;
+          this.runningCount++;
+          if (this.runningCount == this.images.length) {
+            this.isDataAnalysed = true;
+            this.isDataAnalysing = false;
+            console.log('Data is analysed', this.densities);
+          }
         });
         promises.reduce((prev, curr, index, array) => {
           return prev.then(curr);
@@ -299,7 +312,6 @@ class Training {
           element['second_density'] = secondDensity;
           element['letter_space'] = element['kerning_value'];
           element['letter_space_rate'] = element['kerning_value']/fontsize;
-          console.log(element);
           resolve();
         });
       }
@@ -312,6 +324,21 @@ class Training {
       console.log('Data is merged', this.result);
       this.isDataMerged = true;
       this.isDataMerging = false;
+
+      console.log(
+      this.isTextRendered,
+      this.isImagesStored,
+      this.isDraggable,
+      this.isFontSet,
+      this.isSizeSet,
+      this.isStayPhase,
+      this.isDataPrepared,
+      this.isDataAnalysed,
+      this.isDataMerged,
+      this.isDataMerging,
+      this.isDataAnalysing,
+      this.isImagesStoring,
+      this.isDataPreparing);
     });
     promises.reduce((prev, curr, index, array) => {
       return prev.then(curr);
@@ -382,6 +409,7 @@ class Training {
   prepareResultJSON() {
     console.log('Start to prepare result JSON');
     this.isDataPrepared = false;
+    this.isDataPreparing = true;
     const container =
       document.getElementsByClassName('kerning-training-field-chars')[0];
     let chars = container.childNodes;
@@ -400,6 +428,7 @@ class Training {
       }
       if (runningCount == array.length) {
         this.isDataPrepared = true;
+        this.isDataPreparing = false;
       }
     });
   }
@@ -465,19 +494,33 @@ class Training {
   }
   advanceSampleWord() {
     this.isTextRendered = false;
+    this.isDataPreparing = true;
+    this.isDataPrepared = false;
+    this.isImagesStored = false;
+    this.isImagesStoring = true;
     this.prepareResultJSON();
     let interval1 = setInterval(() => {
       if (this.isDataPrepared) {
         clearInterval(interval1);
+        let fontsize =
+          document.getElementsByName('font-size-input')[0].value;
         if (this.sampleWords.index == this.sampleWords.words.length-1) {
-          this.text = '';
+          // Storing images method is not needed when this text is a last smaple
+          this.isImagesStored = true;
+          this.isImagesStoring = false;
+          // Init text
+          this.sampleWords.index = 0;
+          this.text = this.sampleWords.words[this.sampleWords.index];
           this.setTrainingText(this.text, () => {
-            this.isTextRendered = this.is_text_rendered();
+            this.enableCharsToBeDragged();
+            this.applyFontToField();
+            this.setKerningFieldFontSize(fontsize);
+            // Preparing to export data
+            this.finishSsmpling();
+            return;
           });
         }
         else {
-          let fontsize =
-            document.getElementsByName('font-size-input')[0].value;
           this.text = this.sampleWords.words[++this.sampleWords.index];
           this.setTrainingText(this.text, () => {
             this.enableCharsToBeDragged();
@@ -515,7 +558,6 @@ class Training {
                                   selected.dataset.path);
   }
   setKerningFieldFontStyle(name, path) {
-
     this.isTextRendered = false;
     this.isFontSet = false;
     console.log('applying font', this.isTextRendered);
@@ -532,8 +574,14 @@ class Training {
     let field =
       document.getElementsByClassName('kerning-training-field-chars')[0];
     field.style.fontFamily = name;
-    this.isFontSet = true;
-    this.isTextRendered = this.is_text_rendered();
+
+    let interval = setInterval(() => {
+      if (document.fonts.status == 'loaded') {
+        this.isFontSet = true;
+        this.isTextRendered = this.is_text_rendered();
+        clearInterval(interval);
+      }
+    }, 100);
   }
   setKerningFieldFontSize(size) {
     this.isTextRendered = false;
@@ -541,6 +589,13 @@ class Training {
     let field =
       document.getElementsByClassName('kerning-training-field-chars')[0];
     field.style.fontSize = `${ size }px`;
+    // let interval = setInterval(() => {
+    //   if (field.style.fontSize == `${ size }px`) {
+    //     this.isSizeSet = true;
+    //     this.isTextRendered = this.is_text_rendered();
+    //     clearInterval(interval);
+    //   }
+    // }, 100);
     this.isSizeSet = true;
     this.isTextRendered = this.is_text_rendered();
   }
