@@ -11,7 +11,7 @@ export default class FontSelectorView extends React.Component {
     this.fonts = props.fonts;
   }
   render() {
-    const className = '';
+    // const className = 'font-selector-items';
     let options = [];
     this.fonts.forEach((element, index, array) => {
       options.push(
@@ -28,7 +28,7 @@ export default class FontSelectorView extends React.Component {
       );
     });
     return (
-      <select className="font-selector-items" name="">
+      <select className="font-selector-items" name="font-selector">
         { options }
       </select>
     );

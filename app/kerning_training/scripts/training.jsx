@@ -16,10 +16,6 @@ import Util from '../../common/scripts/util.jsx';
 
 class Training {
   constructor() {
-    this.settings = {
-      isEmBoxShown: false,
-      isBoundingBoxShown: false
-    }
     this.isTextRendered = false;
     this.isImagesStored = false;
     this.isDraggable = false;
@@ -60,13 +56,33 @@ class Training {
     });
     this.addUIEvents();
     // When some process is running, loading curtain is drawn to reject user input
+    this.isLastPhaseStay = this.isStayPhase;
     this.curtain =
       document.getElementsByClassName('loading-curtain')[0];
+    this.startButtonWrapper =
+      document.getElementsByClassName('sampling-ui-start')[0];
+    this.finishButtonWrapper =
+      document.getElementsByClassName('sampling-ui-finish')[0];
+    this.nextButtonWrapper =
+      document.getElementsByClassName('sampling-ui-next')[0];
+    this.exportJSONButtonWrapper =
+      document.getElementsByClassName('export-as-json')[0];
+    this.exportImagesButtonWrapper =
+      document.getElementsByClassName('export-char-images')[0];
     let interval = setInterval(() => {
       if (this.is_operation_allowed()) {
         Util.addClass(this.curtain, 'hidden');
-        // clearInterval(interval);
       }
+      if (this.isStayPhase != this.isLastPhaseStay) {
+        Util.toggleClass(this.startButtonWrapper, 'hidden');
+        Util.toggleClass(this.finishButtonWrapper, 'hidden');
+        Util.toggleClass(this.nextButtonWrapper, 'hidden');
+        Util.toggleClass(this.exportJSONButtonWrapper, 'hidden');
+        Util.toggleClass(this.exportImagesButtonWrapper, 'hidden');
+        this.isStayPhase?
+          this.enableFontSelector(): this.disableFontSelector();
+      }
+      this.isLastPhaseStay = this.isStayPhase;
     }, 5);
 
   }
@@ -92,7 +108,6 @@ class Training {
       this.storeCharImages();
       let interval = setInterval(() => {
         if (this.isTextRendered) {
-          this.isStayPhase = false;
           console.log('Those chars are stored.', this.images);
           clearInterval(interval);
         }
@@ -120,7 +135,7 @@ class Training {
         this.applyFontToField();
         this.setKerningFieldFontSize(fontsize);
         // Preparing to export text
-        this.finishSsmpling();
+        this.finishSampling();
       });
     });
   }
@@ -132,7 +147,6 @@ class Training {
     });
   }
   addFontSelectEvent() {
-    let _this = this;
     let selector = document.getElementsByClassName('font-selector-items')[0];
     selector.addEventListener('change', (event) => {
       if (!this.isStayPhase) { return; }
@@ -146,8 +160,6 @@ class Training {
   addExportResultJSONEvent() {
     let button = document.getElementsByName('export-as-json')[0];
     button.addEventListener('click', (event) => {
-      console.log(this.isImagesStored, this.isDraggable,
-                  this.isFontSet,this.isSizeSet);
       if (!this.isStayPhase ||
           !this.isImagesStored ||
           !this.isDataPrepared) { return; }
@@ -155,7 +167,6 @@ class Training {
     });
   }
   addExportCharImagesEvent() {
-    let _this = this;
     let button = document.getElementsByName('export-char-images')[0];
     button.addEventListener('click', (event) => {
       if (!this.isStayPhase) { return; }
@@ -191,7 +202,7 @@ class Training {
     // Initial font size of the kerning field is 50px
     // this.setKerningFieldFontSize(50);
   }
-  finishSsmpling() {
+  finishSampling() {
     if (this.isStayPhase) { return; }
     this.isDataPreparing = true;
     this.isDataAnalysing = true;
@@ -323,21 +334,6 @@ class Training {
       console.log('Data is merged', this.result);
       this.isDataMerged = true;
       this.isDataMerging = false;
-
-      console.log(
-      this.isTextRendered,
-      this.isImagesStored,
-      this.isDraggable,
-      this.isFontSet,
-      this.isSizeSet,
-      this.isStayPhase,
-      this.isDataPrepared,
-      this.isDataAnalysed,
-      this.isDataMerged,
-      this.isDataMerging,
-      this.isDataAnalysing,
-      this.isImagesStoring,
-      this.isDataPreparing);
     });
     promises.reduce((prev, curr, index, array) => {
       return prev.then(curr);
@@ -371,7 +367,6 @@ class Training {
         element.dragging = false;
         // Make drag events to each span elements
         element.addEventListener('mousedown', () => {
-          console.log(this.isDraggable, this.isImagesStored, this.isSizeSet, this.isFontSet);
           if (!this.isTextRendered || this.isStayPhase) { return; }
           element.dragging = true;
           element.pivot = element.clientX;
@@ -515,7 +510,7 @@ class Training {
             this.applyFontToField();
             this.setKerningFieldFontSize(fontsize);
             // Preparing to export data
-            this.finishSsmpling();
+            this.finishSampling();
             return;
           });
         }
@@ -588,15 +583,20 @@ class Training {
     let field =
       document.getElementsByClassName('kerning-training-field-chars')[0];
     field.style.fontSize = `${ size }px`;
-    // let interval = setInterval(() => {
-    //   if (field.style.fontSize == `${ size }px`) {
-    //     this.isSizeSet = true;
-    //     this.isTextRendered = this.is_text_rendered();
-    //     clearInterval(interval);
-    //   }
-    // }, 100);
     this.isSizeSet = true;
     this.isTextRendered = this.is_text_rendered();
+  }
+  disableFontSelector() {
+    let selector =
+      document.getElementsByName('font-selector')[0];
+    if (selector == undefined) { return; }
+    selector.disabled = true;
+  }
+  enableFontSelector() {
+    let selector =
+      document.getElementsByName('font-selector')[0];
+    if (selector == undefined) { return; }
+    selector.disabled = false;
   }
   is_text_rendered() {
     return this.isFontSet && this.isSizeSet && this.isDraggable;
