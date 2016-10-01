@@ -16,20 +16,21 @@ import Util from '../../common/scripts/util.jsx';
 
 class Training {
   constructor() {
-    // Status
+    // Status booleans
     this.isTextRendered = false;
-    this.isImagesStored = false;
     this.isDraggable = false;
     this.isFontSet = false;
     this.isSizeSet = false;
-    this.isStayPhase = true;
+    this.isImagesStored = false;
+    this.isImagesStoring = false;
     this.isDataPrepared = false;
+    this.isDataPreparing = false;
     this.isDataAnalysed = false;
+    this.isDataAnalysing = false;
     this.isDataMerged = false;
     this.isDataMerging = false;
-    this.isDataAnalysing = false;
-    this.isImagesStoring = false;
-    this.isDataPreparing = false;
+    this.isStayPhase = true;
+    this.isLastPhaseStay = this.isStayPhase;
     // To make a dropbox contains all fonts your system has
     this.initFontSelector(() => {
       // Followings are callback functions
@@ -46,6 +47,7 @@ class Training {
     this.images = new Array();
     this.densities = undefined;
     this.zip = new JSZip();
+    // Sample words
     this.sampleWords = {
       words: require('../../data/sample_text/kumo_no_ito/data.json')["words"],
       index: 0
@@ -54,9 +56,9 @@ class Training {
     this.setTrainingText(this.text, () => {
       this.enableCharsToBeDragged();
     });
+    // UI events
     this.addUIEvents();
-    // When some process is running, loading curtain is drawn to reject user input
-    this.isLastPhaseStay = this.isStayPhase;
+    // Wrappers for UI
     this.curtain =
       document.getElementsByClassName('loading-curtain')[0];
     this.startButtonWrapper =
@@ -69,16 +71,21 @@ class Training {
       document.getElementsByClassName('export-as-json')[0];
     this.exportImagesButtonWrapper =
       document.getElementsByClassName('export-char-images')[0];
+    // Watch status
     let interval = setInterval(() => {
+      // When some process is running,
+      // loading curtain is drawn to reject user input
       if (this.is_operation_allowed()) {
         Util.addClass(this.curtain, 'hidden');
       }
+      // Hide or show UI
       if (this.isStayPhase != this.isLastPhaseStay) {
         Util.toggleClass(this.startButtonWrapper, 'hidden');
         Util.toggleClass(this.finishButtonWrapper, 'hidden');
         Util.toggleClass(this.nextButtonWrapper, 'hidden');
         Util.toggleClass(this.exportJSONButtonWrapper, 'hidden');
         Util.toggleClass(this.exportImagesButtonWrapper, 'hidden');
+        // Disable/enable font setting UI
         if (this.isStayPhase) {
           this.enableFontSelector();
           this.enableFontSizeInput();
