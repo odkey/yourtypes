@@ -17,15 +17,17 @@ const dialog = remote.dialog;
 
 class ApplyingEditor {
   constructor() {
-    this.mergedData = undefined;
+    this.isSampledDataLoaded = false;
+    this.isSampledDataLoading = false;
+    this.sampledData = undefined;
     this.densities = undefined;
     this.nearest = undefined;
-
+    this.fontInfo = {};
     this.addUIEvents();
   }
   addUIEvents() {
     this.addNewTextInputEvent();
-    this.addMergedDataJSONSelectEvent();
+    this.addSampledDataJSONSelectEvent();
     this.addApplyingDataToNewTextEvent();
   }
   setDesignedText(text, callback) {
@@ -119,7 +121,7 @@ class ApplyingEditor {
   apply_data(element1, element2) {
     return () => {
       return new Promise((resolve, reject) => {
-        if (this.mergedData.length <= 0 ||
+        if (this.sampledData.length <= 0 ||
             element1.textContent == '' ||
             element2.textContent == '') { resolve(); }
         let nearest = { index: -1, distance_square: 10 };
@@ -141,13 +143,13 @@ class ApplyingEditor {
           }
         }
         let promises = [];
-        this.mergedData.forEach((element, index) => {
+        this.sampledData.forEach((element, index) => {
           promises.push(search_nearest(element, index));
         });
         promises.push(() => {
-          console.log(this.mergedData[nearest.index]);
+          console.log(this.sampledData[nearest.index]);
           element1.style.letterSpacing =
-            `${ this.mergedData[nearest.index]['letter_space_rate'] }em`;
+            `${ this.sampledData[nearest.index]['letter_space_rate'] }em`;
           resolve();
         });
         promises.reduce((prev, curr, index, array) => {
@@ -184,36 +186,60 @@ class ApplyingEditor {
       }, Promise.resolve());
     });
   }
-  addMergedDataJSONSelectEvent() {
-    let _this = this;
-    let button = document.getElementsByName('merged-data-json-selector')[0];
-    button.addEventListener('click', (event) => {
-      this.mergedData = {};
-      let focusedWindow = remote.getCurrentWindow();
-      let options = {
-        properties: [
-          'openFile'
-        ]
-      };
-      dialog.showOpenDialog(focusedWindow, options, (file) => {
-        if (file == undefined) { return; }
-        fs.readFile(file[0], 'utf8', (error, rawData) => {
-          if (error) { return; }
-          this.mergedData = [];
-          let json = JSON.parse(rawData);
-          json.values.forEach((element, index) => {
-            if (element.first_density > 0 && element.second_density > 0) {
-              const item = {
-                first_density: element.first_density,
-                second_density: element.second_density,
-                letter_space_rate: element.kerning_value/50.0
-              };
-              this.mergedData.push(item);
-            }
-          });
-          console.log(this.mergedData);
+  loadSampledDataJSON() {
+    this.sampledData = {};
+    let focusedWindow = remote.getCurrentWindow();
+    let options = {
+      properties: [
+        'openFile'
+      ]
+    };
+    dialog.showOpenDialog(focusedWindow, options, (file) => {
+      if (file == undefined ||
+          file[0].indexOf('.json') != file[0].length-5) { return; }
+      fs.readFile(file[0], 'utf8', (error, rawData) => {
+        if (error) { return; }
+        this.isSampledDataLoaded = false;
+        this.isSampledDataLoading = true;
+        this.sampledData = [];
+        let json = JSON.parse(rawData);
+        this.fontInfo = {
+          size: json.info.size,
+          path: json.info.path,
+          style: json.info.style,
+          family: json.info.family,
+          weight: json.info.weight,
+          italic: json.info.italic,
+          monospace: json.info.monospace,
+          postscriptName: json.info.postscript_name
+        };
+        let runningCount = 0;
+        json.values.forEach((element, index) => {
+          if (element.first_density > 0 && element.second_density > 0) {
+            const item = {
+              first_density: element.first_density,
+              second_density: element.second_density,
+              letter_space_rate: element.kerning_value/50.0
+            };
+            this.sampledData.push(item);
+            runningCount++;
+          }
         });
+        let interval = setInterval(() => {
+          if (runningCount == json.values.length) {
+            this.isSampledDataLoaded = true;
+            this.isSampledDataLoading = false;
+            console.log('JSON loaded', this.sampledData);
+            clearInterval(interval);
+          }
+        }, 100);
       });
+    });
+  }
+  addSampledDataJSONSelectEvent() {
+    let button = document.getElementsByName('sampled-data-json-selector')[0];
+    button.addEventListener('click', (event) => {
+      this.loadSampledDataJSON();
     });
   }
 }
