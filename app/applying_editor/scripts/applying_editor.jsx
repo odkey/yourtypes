@@ -414,98 +414,15 @@ class ApplyingEditor {
         if (this.isSampledDataLoaded && !this.isSampledDataLoading) {
           clearInterval(interval);
           if (this.isTextSet && !this.isTextSetting) {
-            // console.log('Start applying data to new text');
-            // this.applyDataToNewText();
+            let event = document.createEvent('HTMLEvents');
+            event.initEvent('change', false, true);
+            document.getElementsByName('new-text-input')[0].dispatchEvent(event);
           }
         }
       }, 100);
     });
   }
-  applyDataToNewText() {
-    this.isTextKerning = true;
-    this.isTextKerned = false;
-    if (!this.isTextSet || this.isTextSetting ||
-        !this.isTextAnalysed || this.isTextAnalysing ||
-        !this.isSampledDataLoaded || this.isSampledDataLoading) {
-      return;
-    }
-    let field = document.getElementsByClassName('designed-text-field')[0];
 
-    /* fix it !!  set font
-    ====================== */
-    this.applyFont();
-
-    let chars = document.getElementsByClassName(
-      'designed-text-field-chars')[0].childNodes;
-    let runningCount = 0;
-    let apply_data = (element1, element2) => {
-      return () => {
-        return new Promise((resolve, reject) => {
-          if (this.sampledData.length <= 0 ||
-              element1.textContent == '' ||
-              element2.textContent == '') { resolve(); }
-          console.log('applying to', element1.textContent, 'and', element2.textContent);
-          let nearest = { index: -1, distance_square: 10 };
-          let firstDensity = this.densities[element1.textContent];
-          let secondDensity = this.densities[element2.textContent];
-          let search_nearest = (element, index) => {
-            return () => {
-              return new Promise((c_resolve, reject) => {
-                let distanceSquare =
-                  this.distance_square(parseFloat(firstDensity),
-                                       parseFloat(secondDensity),
-                                       element.first_density,
-                                       element.second_density);
-                if (index == 0 || distanceSquare < nearest.distance_square) {
-                  nearest = { index: index, distance_square: distanceSquare }
-                }
-                c_resolve();
-              });
-            }
-          }
-          let promises = [];
-          this.sampledData.forEach((element, index) => {
-            promises.push(search_nearest(element, index));
-          });
-          promises.push(() => {
-            console.log(firstDensity, secondDensity, this.sampledData[nearest.index]);
-            element1.style.letterSpacing =
-              `${ this.sampledData[nearest.index]['letter_space_rate'] }em`;
-            runningCount++;
-            resolve();
-          });
-          promises.reduce((prev, curr, index, array) => {
-            return prev.then(curr);
-          }, Promise.resolve());
-        });
-      }
-    }
-    let promises2 = [];
-    chars.forEach((element, index, array) => {
-      if (index+1 >= array.length) { return; }
-      else　{
-        promises2.push(apply_data(array[index], array[index+1]));
-      }
-    });
-    promises2.push(() => {
-      let interval = setInterval(() => {
-        console.log('Wait for the end of auto kerning', runningCount, chars.length-1);
-        if (runningCount == chars.length - 1) {
-          clearInterval(interval);
-          console.log('New Text are Kerned');
-        }
-      });
-    });
-    let interval = setInterval(() => {
-      if (this.isFontSet) {
-        clearInterval(interval);
-        promises2.reduce((prev, curr, index, array) => {
-          return prev.then(curr);
-        }, Promise.resolve());
-      }
-
-    });
-  }
   initFontSelector(callback) {
     fontManager.getAvailableFonts((fonts) => {
       let fonts_sort_condition = (font1, font2) => {
