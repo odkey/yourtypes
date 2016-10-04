@@ -143,12 +143,17 @@ class Training {
         document.getElementsByName('font-size-input')[0].value;
       this.sampleWords.index = 0;
       this.text = this.sampleWords.words[this.sampleWords.index];
-      this.setTrainingText(this.text, () => {
-        this.enableCharsToBeDragged();
-        this.applyFontToField();
-        this.setKerningFieldFontSize(fontsize);
-        // Preparing to export text
-        this.finishSampling();
+      // Preparing to export text
+      this.finishSampling();
+      let interval = setInterval(() => {
+        if (this.isStayPhase) {
+          clearInterval(interval);
+          this.setTrainingText(this.text, () => {
+            this.enableCharsToBeDragged();
+            this.applyFontToField();
+            this.setKerningFieldFontSize(fontsize);
+          });
+        }
       });
     });
   }
@@ -426,6 +431,7 @@ class Training {
         runningCount++;
       }
       else {
+        console.log(element.style['letter-spacing'].substr('px'));
         this.result.values.push({
           'first_char': element.textContent,
           'second_char': array[index+1].textContent,
