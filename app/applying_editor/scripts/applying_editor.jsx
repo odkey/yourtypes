@@ -8,7 +8,9 @@ import fs from 'fs';
 import request from 'request';
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
+import fontManager from 'font-manager';
 import DesignedTextView from './view/designed_text_view.jsx';
+import FontSelectorView from '../../common/scripts/font_selector_view.jsx';
 
 import Util from '../../common/scripts/util.jsx';
 
@@ -32,12 +34,67 @@ class ApplyingEditor {
     this.densities = undefined;
     this.nearest = undefined;
     this.fontInfo = {};
+
+    this.initFontSelector(() => {
+      this.addFontSelectEvent();
+      this.applyFont();
+    });
     this.addUIEvents();
   }
   addUIEvents() {
     this.addNewTextInputEvent();
     this.addSampledDataJSONSelectEvent();
     // this.addApplyingDataToNewTextEvent();
+  }
+  addFontSelectEvent() {
+    let selector = document.getElementsByClassName('font-selector-items')[0];
+    selector.addEventListener('change', (event) => {
+      // if (!this.isStayPhase) { return; }
+      // this.isFontSet = false;
+      let selected = selector.options[selector.selectedIndex];
+      let name = selected.dataset.postscriptname;
+      let path = selected.dataset.path;
+      this.setFontStyle(name, path);
+    });
+  }
+  applyFont() {
+    let selector = document.getElementsByClassName('font-selector-items')[0];
+    let selected = selector.options[selector.selectedIndex];
+    this.setFontStyle(selected.dataset.postscriptname,
+                                  selected.dataset.path);
+  }
+  setFontStyle(name, path) {
+    // this.isTextRendered = false;
+    // this.isFontSet = false;
+    // console.log('applying font', this.isTextRendered);
+    let className = 'additional-font-face-style-tag';
+    Util.deleteElementWithClassName(className);
+    let style = document.createElement('style');
+    style.className = className;
+    style.appendChild(document.createTextNode(
+      `@font-face {
+         font-family: ${ name };
+         src: url(${ path });
+       }`));
+    document.head.appendChild(style);
+    let field =
+      document.getElementsByClassName('designed-text-field-chars')[0];
+
+    let interval = setInterval(() => {
+      if (field != undefined) {
+        clearInterval(interval);
+        field.style.fontFamily = name;
+      }
+    }, 100);
+
+    // let interval = setInterval(() => {
+    //   if (document.fonts.status == 'loaded') {
+    //     // this.isFontSet = true;
+    //     // this.isTextRendered = this.is_text_rendered();
+    //     clearInterval(interval);
+    //   }
+    // }, 100);
+
   }
   setDesignedText(text, callback) {
     document.getElementsByClassName('designed-text-field')[0].innerHTML = '';
@@ -82,47 +139,6 @@ class ApplyingEditor {
       }
     });
   }
-  // addNewTextInputEvent() {
-  //   let _this = this;
-  //   let textarea = document.getElementsByName('new-text-input')[0];
-  //   textarea.addEventListener('change', (event) => {
-  //     let text = event.srcElement.value;
-  //     this.setDesignedText(text, () => {
-  //       this.analyseNewText();
-  //     });
-  //   });
-  // }
-  // analyseNewText() {
-  //   let chars = document.getElementsByClassName(
-  //     'designed-text-field-chars')[0].childNodes;
-  //   if (chars.length < 2) { return; }
-  //   let promises = [];
-  //   chars.forEach((element, index, array) => {
-  //     promises.push(this.analyse_char(element, index));
-  //   });
-  //   promises.push(() => {
-  //     console.log('densities: ', this.densities);
-  //   });
-  //   promises.reduce((prev, curr, index, array) => {
-  //     return prev.then(curr);
-  //   }, Promise.resolve());
-  // }
-  // addAnalysingNewTextEvent() {
-  //   let _this = this;
-  //   let button = document.getElementsByName('analyse-new-text')[0];
-  //   button.addEventListener('click', (event) => {
-  //     let chars = document.getElementsByClassName(
-  //       'designed-text-field-chars')[0].childNodes;
-  //     if (chars.length < 2) { return; }
-  //     let promises = [];
-  //     chars.forEach((element, index, array) => {
-  //       promises.push(this.analyse_char(element, index));
-  //     });
-  //     promises.push(() => {
-  //       console.log('densities: ', this.densities);
-  //     });
-  //   });
-  // }
   analyse_char(element, index) {
     return () => {
       return new Promise((resolve, reject) => {
@@ -167,29 +183,6 @@ class ApplyingEditor {
     let diffY = pivotY - pointY;
     return  diffX * diffX + diffY * diffY;
   }
-  // addApplyingDataToNewTextEvent() {
-  //   let _this = this;
-  //   this.densities = {};
-  //   this.nearest = { index: 0, distance_square: 0 }
-  //   let button = document.getElementsByName('apply-sampled-json-to-new-text')[0];
-  //   button.addEventListener('click', (event) => {
-  //     let chars =　document.getElementsByClassName(
-  //       'designed-text-field-chars')[0].childNodes;
-  //     let promises = [];
-  //     chars.forEach((element, index, array) => {
-  //       if (index+1 >= array.length) { return;}
-  //       else　{
-  //         promises.push(this.apply_data(array[index], array[index+1]));
-  //       }
-  //     });
-  //     promises.push(() => {
-  //
-  //     });
-  //     promises.reduce((prev, curr, index, array) => {
-  //       return prev.then(curr);
-  //     }, Promise.resolve());
-  //   });
-  // }
   analyseNewText() {
     let chars = document.getElementsByClassName(
       'designed-text-field-chars')[0].childNodes;
@@ -271,17 +264,8 @@ class ApplyingEditor {
         if (this.isSampledDataLoaded && !this.isSampledDataLoading) {
           clearInterval(interval);
           if (this.isTextSet && !this.isTextSetting) {
-            // console.log('Start analysing density of chars');
-            // this.isTextAnalysed = false;
-            // this.isTextAnalysing = true;
-            // this.analyseNewText();
-            // let interval2 = setInterval(() => {
-              // if (this.isTextAnalysed && !this.isTextAnalysing) {
-                // clearInterval(interval2);
-                console.log('Start applying data to new text');
-                this.applyDataToNewText();
-              // }
-            // }, 100);
+            console.log('Start applying data to new text');
+            this.applyDataToNewText();
           }
         }
       }, 100);
@@ -299,6 +283,7 @@ class ApplyingEditor {
 
     /* fix it !!  set font
     ====================== */
+    this.applyFont();
 
     let chars = document.getElementsByClassName(
       'designed-text-field-chars')[0].childNodes;
@@ -364,7 +349,20 @@ class ApplyingEditor {
     promises2.reduce((prev, curr, index, array) => {
       return prev.then(curr);
     }, Promise.resolve());
-
+  }
+  initFontSelector(callback) {
+    fontManager.getAvailableFonts((fonts) => {
+      let fonts_sort_condition = (font1, font2) => {
+        if (font1.postscriptName < font2.postscriptName) { return -1; }
+        if (font1.postscriptName > font2.postscriptName) { return 1; }
+        return 0;
+      }
+      ReactDOM.render(
+        <FontSelectorView fonts={ fonts.sort(fonts_sort_condition) } />,
+        document.getElementsByClassName('font-selector')[0],
+        callback
+      );
+    });
   }
 }
 

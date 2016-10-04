@@ -10,7 +10,7 @@ import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 import fontManager from 'font-manager';
 import TrainingSampleTextView from './view/training_sample_text_view.jsx';
-import FontSelectorView from './view/font_selector_view.jsx';
+import FontSelectorView from '../../common/scripts/font_selector_view.jsx';
 
 import Util from '../../common/scripts/util.jsx';
 
