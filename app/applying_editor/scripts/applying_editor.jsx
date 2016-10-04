@@ -19,6 +19,7 @@ const dialog = remote.dialog;
 
 class ApplyingEditor {
   constructor() {
+    this.isFontSet = false;
     this.isTextSet = false;
     this.isTextSetting = false;
     this.isSampledDataLoaded = false;
@@ -29,17 +30,42 @@ class ApplyingEditor {
     this.isTextAnalysing = false;
     this.isTextKerned = false;
     this.isTextKerning = false;
+    this.isImagesStoring = false;
+    this.isImagesStored = false;
+
+    this.analysingCount = 0;
 
     this.sampledData = undefined;
     this.densities = undefined;
     this.nearest = undefined;
     this.fontInfo = {};
+    this.images = new Array();
 
     this.initFontSelector(() => {
       this.addFontSelectEvent();
+      this.isFontSet = false;
       this.applyFont();
     });
     this.addUIEvents();
+
+    let interval = setInterval(() => {
+      if (this.isSampledDataLoaded && !this.isSampledDataLoading) {
+        this.enableNewTextInput();
+      }
+      else {
+        this.disableNewTextInput();
+      }
+    }, 100);
+  }
+  disableNewTextInput() {
+    let textarea = document.getElementsByName('new-text-input')[0];
+    if (textarea == undefined) { return; }
+    textarea.disabled = true;
+  }
+  enableNewTextInput() {
+    let textarea = document.getElementsByName('new-text-input')[0];
+    if (textarea == undefined) { return; }
+    textarea.disabled = false;
   }
   addUIEvents() {
     this.addNewTextInputEvent();
@@ -65,7 +91,7 @@ class ApplyingEditor {
   }
   setFontStyle(name, path) {
     // this.isTextRendered = false;
-    // this.isFontSet = false;
+    this.isFontSet = false;
     // console.log('applying font', this.isTextRendered);
     let className = 'additional-font-face-style-tag';
     Util.deleteElementWithClassName(className);
@@ -84,17 +110,9 @@ class ApplyingEditor {
       if (field != undefined) {
         clearInterval(interval);
         field.style.fontFamily = name;
+        this.isFontSet = true;
       }
     }, 100);
-
-    // let interval = setInterval(() => {
-    //   if (document.fonts.status == 'loaded') {
-    //     // this.isFontSet = true;
-    //     // this.isTextRendered = this.is_text_rendered();
-    //     clearInterval(interval);
-    //   }
-    // }, 100);
-
   }
   setDesignedText(text, callback) {
     document.getElementsByClassName('designed-text-field')[0].innerHTML = '';
@@ -102,9 +120,9 @@ class ApplyingEditor {
       <DesignedTextView text={ text }/>,
       document.getElementsByClassName('designed-text-field')[0],
       () => {
+        if (callback) { callback(); }
         this.isTextSet = true;
         this.isTextSetting = false;
-        if (callback) { callback(); }
       }
     );
   }
@@ -114,29 +132,157 @@ class ApplyingEditor {
       let text = event.srcElement.value;
       this.isTextSet = false;
       this.isTextSetting = true;
-      this.setDesignedText(text);
+      this.isFontSet = false;
+      this.setDesignedText(text, () => { this.applyFont(); });
       if (this.isSampledDataLoaded && !this.isSampledDataLoading) {
-
+        this.isImagesStored = false;
+        this.isImagesStoring = true;
         this.isTextAnalysed = false;
         this.isTextAnalysing = true;
         this.isDataApplied = false;
         this.isDataApplying = true;
-        let interval1 = setInterval(() => {
-          if (this.isTextSet && !this.isTextSetting) {
-            clearInterval(interval1);
-            console.log('Start analysing density of chars');
-            this.analyseNewText();
+        let interval = setInterval(() => {
+          if (this.isTextSet && !this.isTextSetting && this.isFontSet) {
+            clearInterval(interval);
+            console.log('Store char images');
+            this.storeCharImages();
             let interval2 = setInterval(() => {
-              if (this.isTextAnalysed && !this.isTextAnalysing) {
+              if (this.isImagesStored && !this.isImagesStoring) {
                 clearInterval(interval2);
-                console.log('Start applying data to new text');
-                this.applyDataToNewText();
+                console.log('Analyse chars stored into images');
+                this.analyseCharImages();
+                let interval3 = setInterval(() => {
+                  if (this.isTextAnalysed && !this.isTextAnalysing) {
+                    clearInterval(interval3);
+                    console.log('Apply letter space data');
+                    this.applyLetterSpaces();
+
+                  }
+                }, 100);
               }
             }, 100);
           }
         }, 100);
-
       }
+    });
+  }
+  applyLetterSpaces() {
+    this.isDataApplied = false;
+    this.isDataApplying = true;
+    let chars = document.getElementsByClassName(
+      'designed-text-field-chars')[0].childNodes;
+    let applyingCount = 0;
+    chars.forEach((element, index, array) => {
+      if (index == array.length - 1) { return; }
+      let nearest = { squaredDistance: 0, index: -1 };
+      let firstDensity = parseFloat(this.densities[array[index].textContent]);
+      let secondDensity = parseFloat(this.densities[array[index+1].textContent]);
+      let searchCount = 0;
+      this.sampledData.forEach((element, index, array) => {
+        let sampleFirstDenstiy = parseFloat(element.first_density);
+        let sampleSecondDensity = parseFloat(element.second_density);
+        let diffFirst = firstDensity - sampleFirstDenstiy;
+        let diffSecond = secondDensity - sampleSecondDensity;
+        let squaredDistance = diffFirst * diffFirst + diffSecond * diffSecond;
+        if (searchCount == 0 || squaredDistance < nearest.squaredDistance) {
+          nearest = { index: index, squaredDistance: squaredDistance};
+        }
+        searchCount++;
+      });
+      let interval = setInterval(() => {
+        if (searchCount == this.sampledData.length) {
+          clearInterval(interval);
+          element.style.letterSpacing =
+            `${ this.sampledData[nearest.index].letter_space_rate }em`;
+          applyingCount++;
+        }
+      }, 100);
+    });
+    let interval = setInterval(() => {
+      if (applyingCount == chars.length-1) {
+        clearInterval(interval);
+        this.isDataApplied = true;
+        this.isDataApplying = false;
+        console.log('Letter space data is applied');
+      }
+    }, 100);
+  }
+  analyseCharImages() {
+    if (!this.isImagesStored) { return; }
+    this.isTextAnalysed = false;
+    this.isTextAnalysing = true;
+    this.densities = {};
+    this.analysingCount = 0;
+    this.images.forEach((element, index, array) => {
+      let canvas = document.createElement('canvas');
+      if (!canvas || !canvas.getContext) {
+        console.log('error: illegal canvas');
+        return;
+      }
+      let image = new Image();
+      let context = canvas.getContext('2d');
+      image.src = `${ element.img.src }`;
+      image.onload = () => {
+        context.drawImage(image, 0, 0);
+        let imageData = context.getImageData(0, 0, image.width, image.height);
+        let pixels = imageData.data;
+        let sumBlack = 0;
+        let density = 0;
+        let sum_up = (element, index) => {
+          return () => {
+            return new Promise((resolve) => {
+              sumBlack += element/255.0;
+              resolve();
+            });
+          }
+        }
+        let promises = new Array();
+        pixels.forEach((element, index) => {
+          if (index%4 != 3) { return; }
+          promises.push(sum_up(element, index));
+        });
+        promises.push(() => {
+          density = sumBlack / (image.width * image.height);
+          this.densities[element.char] = density;
+          this.analysingCount++;
+          if (this.analysingCount == this.images.length) {
+            this.isTextAnalysed = true;
+            this.isTextAnalysing = false;
+            console.log('New text is analysed', this.densities);
+          }
+        });
+        promises.reduce((prev, curr, index, array) => {
+          return prev.then(curr);
+        }, Promise.resolve());
+      }
+    });
+  }
+  storeCharImages() {
+    this.isImagesStored = false;
+    this.isImagesStoring = true;
+    this.images = new Array();
+    const container =
+      document.getElementsByClassName('designed-text-field-chars')[0];
+    let chars = container.childNodes;
+    let runningCount = 0;
+    chars.forEach((element, index, array) => {
+      html2canvas(element, {
+        onrendered: (canvas) => {
+          let image = new Image();
+          image.src = canvas.toDataURL();
+          let object = {
+            img: image,
+            char: element.textContent
+          };
+          this.images.push(object);
+          runningCount++;
+          if (runningCount == array.length) {
+            this.isImagesStored = true;
+            this.isImagesStoring = false;
+            console.log('All chars are stored', this.images);
+          }
+        }
+      });
     });
   }
   analyse_char(element, index) {
@@ -231,13 +377,17 @@ class ApplyingEditor {
           monospace: json.info.monospace,
           postscriptName: json.info.postscript_name
         };
+        // this.setFontStyle(this.fontInfo.postscriptName, this.fontInfo.path);
+        // document.getElementsByClassName('designed-text-field')[0]
+        //   .style
+        //   .fontSize = this.fontInfo.size;
         let runningCount = 0;
         json.values.forEach((element, index) => {
           if (element.first_density > 0 && element.second_density > 0) {
             const item = {
               first_density: element.first_density,
               second_density: element.second_density,
-              letter_space_rate: element.kerning_value/50.0
+              letter_space_rate: element.letter_space_rate
             };
             this.sampledData.push(item);
             runningCount++;
@@ -264,8 +414,8 @@ class ApplyingEditor {
         if (this.isSampledDataLoaded && !this.isSampledDataLoading) {
           clearInterval(interval);
           if (this.isTextSet && !this.isTextSetting) {
-            console.log('Start applying data to new text');
-            this.applyDataToNewText();
+            // console.log('Start applying data to new text');
+            // this.applyDataToNewText();
           }
         }
       }, 100);
@@ -318,7 +468,7 @@ class ApplyingEditor {
             promises.push(search_nearest(element, index));
           });
           promises.push(() => {
-            console.log(this.sampledData[nearest.index]);
+            console.log(firstDensity, secondDensity, this.sampledData[nearest.index]);
             element1.style.letterSpacing =
               `${ this.sampledData[nearest.index]['letter_space_rate'] }em`;
             runningCount++;
@@ -346,9 +496,15 @@ class ApplyingEditor {
         }
       });
     });
-    promises2.reduce((prev, curr, index, array) => {
-      return prev.then(curr);
-    }, Promise.resolve());
+    let interval = setInterval(() => {
+      if (this.isFontSet) {
+        clearInterval(interval);
+        promises2.reduce((prev, curr, index, array) => {
+          return prev.then(curr);
+        }, Promise.resolve());
+      }
+
+    });
   }
   initFontSelector(callback) {
     fontManager.getAvailableFonts((fonts) => {

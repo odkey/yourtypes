@@ -290,7 +290,7 @@ class Training {
       let context = canvas.getContext('2d');
       image.src = `${ element.img.src }`;
       image.onload = () => {
-        context.drawImage(image, 0, 0, image.width, image.height);
+        context.drawImage(image, 0, 0);
         let imageData =
           context.getImageData(0, 0, image.width, image.height);
         let pixels = imageData.data;
@@ -431,11 +431,11 @@ class Training {
         runningCount++;
       }
       else {
-        console.log(element.style['letter-spacing'].substr('px'));
         this.result.values.push({
           'first_char': element.textContent,
           'second_char': array[index+1].textContent,
-          'kerning_value': parseInt(element.style['letter-spacing'].substr('px'))
+          'kerning_value': parseInt(element.style['letter-spacing']
+                                           .substr('px'))
         });
         runningCount++;
       }
