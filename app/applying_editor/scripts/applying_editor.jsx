@@ -55,8 +55,29 @@ class ApplyingEditor {
     let textarea = document.getElementsByName('new-text-input')[0];
     textarea.addEventListener('change', (event) => {
       let text = event.srcElement.value;
+      this.isTextSet = false;
+      this.isTextSetting = true;
       this.setDesignedText(text);
-      if (this.isSampledDataLoaded) {
+      if (this.isSampledDataLoaded && !this.isSampledDataLoading) {
+
+        this.isTextAnalysed = false;
+        this.isTextAnalysing = true;
+        this.isDataApplied = false;
+        this.isDataApplying = true;
+        let interval1 = setInterval(() => {
+          if (this.isTextSet && !this.isTextSetting) {
+            clearInterval(interval1);
+            console.log('Start analysing density of chars');
+            this.analyseNewText();
+            let interval2 = setInterval(() => {
+              if (this.isTextAnalysed && !this.isTextAnalysing) {
+                clearInterval(interval2);
+                console.log('Start applying data to new text');
+                this.applyDataToNewText();
+              }
+            }, 100);
+          }
+        }, 100);
 
       }
     });
@@ -141,7 +162,6 @@ class ApplyingEditor {
       });
     }
   }
-
   distance_square(pointX, pointY, pivotX, pivotY) {
     let diffX = pivotX - pointX;
     let diffY = pivotY - pointY;
@@ -244,22 +264,24 @@ class ApplyingEditor {
   addSampledDataJSONSelectEvent() {
     let button = document.getElementsByName('sampled-data-json-selector')[0];
     button.addEventListener('click', (event) => {
+      this.isSampledDataLoaded = false;
+      this.isSampledDataLoading = true;
       this.loadSampledDataJSON();
-      let interval1 = setInterval(() => {
+      let interval = setInterval(() => {
         if (this.isSampledDataLoaded && !this.isSampledDataLoading) {
-          clearInterval(interval1);
+          clearInterval(interval);
           if (this.isTextSet && !this.isTextSetting) {
-            console.log('Start analysing density of chars');
-            this.isTextAnalysed = false;
-            this.isTextAnalysing = true;
-            this.analyseNewText();
-            let interval2 = setInterval(() => {
-              if (this.isTextAnalysed && !this.isTextAnalysing) {
-                clearInterval(interval2);
+            // console.log('Start analysing density of chars');
+            // this.isTextAnalysed = false;
+            // this.isTextAnalysing = true;
+            // this.analyseNewText();
+            // let interval2 = setInterval(() => {
+              // if (this.isTextAnalysed && !this.isTextAnalysing) {
+                // clearInterval(interval2);
                 console.log('Start applying data to new text');
                 this.applyDataToNewText();
-              }
-            }, 100);
+              // }
+            // }, 100);
           }
         }
       }, 100);
@@ -271,8 +293,6 @@ class ApplyingEditor {
     if (!this.isTextSet || this.isTextSetting ||
         !this.isTextAnalysed || this.isTextAnalysing ||
         !this.isSampledDataLoaded || this.isSampledDataLoading) {
-      // console.log(this.isTextSet, this.isTextSetting, this.isDataAnalysed,
-      // this.isDataAnalysing, this.isSampledDataLoaded, this.isSampledDataLoading);
       return;
     }
     let field = document.getElementsByClassName('designed-text-field')[0];
@@ -289,12 +309,13 @@ class ApplyingEditor {
           if (this.sampledData.length <= 0 ||
               element1.textContent == '' ||
               element2.textContent == '') { resolve(); }
+          console.log('applying to', element1.textContent, 'and', element2.textContent);
           let nearest = { index: -1, distance_square: 10 };
           let firstDensity = this.densities[element1.textContent];
           let secondDensity = this.densities[element2.textContent];
           let search_nearest = (element, index) => {
             return () => {
-              return new Promise((resolve, reject) => {
+              return new Promise((c_resolve, reject) => {
                 let distanceSquare =
                   this.distance_square(parseFloat(firstDensity),
                                        parseFloat(secondDensity),
@@ -303,7 +324,7 @@ class ApplyingEditor {
                 if (index == 0 || distanceSquare < nearest.distance_square) {
                   nearest = { index: index, distance_square: distanceSquare }
                 }
-                resolve();
+                c_resolve();
               });
             }
           }
@@ -333,7 +354,7 @@ class ApplyingEditor {
     });
     promises2.push(() => {
       let interval = setInterval(() => {
-        console.log('Wait for the end of auto kerning');
+        console.log('Wait for the end of auto kerning', runningCount, chars.length-1);
         if (runningCount == chars.length - 1) {
           clearInterval(interval);
           console.log('New Text are Kerned');
