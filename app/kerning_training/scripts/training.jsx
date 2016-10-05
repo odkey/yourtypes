@@ -304,7 +304,7 @@ class Training {
             });
           }
         }
-        let promises = [];
+        let promises = new Array();
         pixels.forEach((element, index) => {
           if (index%4 != 3) { return; }
           promises.push(sum_up(element, index));
