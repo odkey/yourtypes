@@ -265,25 +265,42 @@ class ApplyingEditor {
       document.getElementsByClassName('designed-text-field-chars')[0];
     let chars = container.childNodes;
     let runningCount = 0;
+    let store_char = (element, index, array) => {
+      return () => {
+        return new Promise((resolve, reject) => {
+          html2canvas(element, {
+            onrendered: (canvas) => {
+              let image = new Image();
+              image.src = canvas.toDataURL();
+              let object = {
+                img: image,
+                char: element.textContent
+              };
+              this.images.push(object);
+              runningCount++;
+              resolve();
+            }
+          });
+        });
+      }
+    }
+    let promises = new Array();
     chars.forEach((element, index, array) => {
-      html2canvas(element, {
-        onrendered: (canvas) => {
-          let image = new Image();
-          image.src = canvas.toDataURL();
-          let object = {
-            img: image,
-            char: element.textContent
-          };
-          this.images.push(object);
-          runningCount++;
-          if (runningCount == array.length) {
-            this.isImagesStored = true;
-            this.isImagesStoring = false;
-            console.log('All chars are stored', this.images);
-          }
-        }
-      });
+      promises.push(store_char(element, index, array));
     });
+    promises.push(() => {
+      let interval = setInterval(() => {
+        if (runningCount == chars.length) {
+          clearInterval(interval);
+          this.isImagesStored = true;
+          this.isImagesStoring = false;
+          console.log('All chars are stored', this.images);
+        }
+      }, 100);
+    });
+    promises.reduce((prev, curr, index, array) => {
+      return prev.then(curr);
+    }, Promise.resolve());
   }
   analyse_char(element, index) {
     return () => {
@@ -377,10 +394,6 @@ class ApplyingEditor {
           monospace: json.info.monospace,
           postscriptName: json.info.postscript_name
         };
-        // this.setFontStyle(this.fontInfo.postscriptName, this.fontInfo.path);
-        // document.getElementsByClassName('designed-text-field')[0]
-        //   .style
-        //   .fontSize = this.fontInfo.size;
         let runningCount = 0;
         json.values.forEach((element, index) => {
           if (element.first_density > 0 && element.second_density > 0) {
@@ -416,7 +429,8 @@ class ApplyingEditor {
           if (this.isTextSet && !this.isTextSetting) {
             let event = document.createEvent('HTMLEvents');
             event.initEvent('change', false, true);
-            document.getElementsByName('new-text-input')[0].dispatchEvent(event);
+            document.getElementsByName(
+              'new-text-input')[0].dispatchEvent(event);
           }
         }
       }, 100);
