@@ -75,6 +75,7 @@ class ApplyingEditor {
   addFontSelectEvent() {
     let selector = document.getElementsByClassName('font-selector-items')[0];
     selector.addEventListener('change', (event) => {
+      console.log('changed');
       // if (!this.isStayPhase) { return; }
       // this.isFontSet = false;
       let selected = selector.options[selector.selectedIndex];
@@ -83,11 +84,44 @@ class ApplyingEditor {
       this.setFontStyle(name, path);
     });
   }
-  applyFont() {
-    let selector = document.getElementsByClassName('font-selector-items')[0];
-    let selected = selector.options[selector.selectedIndex];
-    this.setFontStyle(selected.dataset.postscriptname,
-                                  selected.dataset.path);
+  findFont(name) {
+    let isExisted = false;
+    let index = -1;
+    const selector = document.getElementsByClassName('font-selector-items')[0];
+    if (selector == undefined || selector.options.length == 0) { return; }
+    const options = selector.options;
+    for (let i = 0; i < options.length; i++) {
+      const valid = (options[i].dataset.postscriptname == name);
+      if (valid) {
+        index = i;
+        isExisted = true;
+      }
+    }
+    return { isExisted: isExisted, index: index };
+  }
+  applyFont(name) {
+    const selector = document.getElementsByClassName('font-selector-items')[0];
+    let fontname = '';
+    let fontpath = '';
+    if (name == undefined) {
+      let selected = selector.options[selector.selectedIndex];
+      fontname = selected.dataset.postscriptname;
+      fontpath = selected.dataset.path;
+    }
+    else {
+      let result = this.findFont(name);
+      if (result.isExisted) {
+        selector.options[result.index].selected = true;
+        let selected = selector.options[result.index];
+        fontname = selected.dataset.postscriptname;
+        fontpath = selected.dataset.path;
+      }
+      else {
+        console.log(`font ${ name } not exists`);
+        return;
+      }
+    }
+    this.setFontStyle(fontname, fontpath);
   }
   setFontStyle(name, path) {
     // this.isTextRendered = false;
@@ -346,27 +380,6 @@ class ApplyingEditor {
     let diffY = pivotY - pointY;
     return  diffX * diffX + diffY * diffY;
   }
-  analyseNewText() {
-    let chars = document.getElementsByClassName(
-      'designed-text-field-chars')[0].childNodes;
-    if (chars.length < 2) { return; }
-    this.isTextAnalysing = true;
-    this.isTextAnalysed = false;
-    this.densities = {};
-    let runningCount = 0;
-    let promises = [];
-    chars.forEach((element, index, array) => {
-      promises.push(this.analyse_char(element, index));
-    });
-    promises.push(() => {
-      console.log('densities: ', this.densities);
-      this.isTextAnalysing =false;
-      this.isTextAnalysed = true;
-    });
-    promises.reduce((prev, curr, index, array) => {
-      return prev.then(curr);
-    }, Promise.resolve());
-  }
   loadSampledDataJSON() {
     this.sampledData = {};
     let focusedWindow = remote.getCurrentWindow();
@@ -394,6 +407,7 @@ class ApplyingEditor {
           monospace: json.info.monospace,
           postscriptName: json.info.postscript_name
         };
+        this.applyFont(this.fontInfo.postscriptName);
         let runningCount = 0;
         json.values.forEach((element, index) => {
           if (element.first_density > 0 && element.second_density > 0) {
