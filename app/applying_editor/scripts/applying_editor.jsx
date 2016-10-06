@@ -38,7 +38,7 @@ class ApplyingEditor {
     this.sampledData = undefined;
     this.densities = undefined;
     this.nearest = undefined;
-    this.fontInfo = {};
+    this.fontInfo = new Object();
     this.images = new Array();
 
     this.initFontSelector(() => {
@@ -48,7 +48,18 @@ class ApplyingEditor {
     });
     this.addUIEvents();
 
+    this.curtain = document.getElementsByClassName('loading-curtain')[0];
     let interval = setInterval(() => {
+
+      // console.log(this.isTextSetting, this.isSampledDataLoading,
+      //             this.isDataApplying, this.isTextAnalysing,
+      //             this.isTextKerning, this.isImagesStoring);
+      if(this.is_operation_allowed()) {
+        Util.addClass(this.curtain, 'hidden');
+      }
+      else {
+        Util.removeClass(this.curtain, 'hidden');
+      }
       if (this.isSampledDataLoaded && !this.isSampledDataLoading) {
         this.enableNewTextInput();
       }
@@ -190,7 +201,6 @@ class ApplyingEditor {
                     clearInterval(interval3);
                     console.log('Apply letter space data');
                     this.applyLetterSpaces();
-
                   }
                 }, 100);
               }
@@ -245,7 +255,7 @@ class ApplyingEditor {
     if (!this.isImagesStored) { return; }
     this.isTextAnalysed = false;
     this.isTextAnalysing = true;
-    this.densities = {};
+    this.densities = new Object();
     this.analysingCount = 0;
     this.images.forEach((element, index, array) => {
       let canvas = document.createElement('canvas');
@@ -381,7 +391,7 @@ class ApplyingEditor {
     return  diffX * diffX + diffY * diffY;
   }
   loadSampledDataJSON() {
-    this.sampledData = {};
+    this.sampledData = new Object();
     let focusedWindow = remote.getCurrentWindow();
     let options = {
       properties: [
@@ -445,12 +455,12 @@ class ApplyingEditor {
             event.initEvent('change', false, true);
             document.getElementsByName(
               'new-text-input')[0].dispatchEvent(event);
+            console.log('New text input hange event is fired');
           }
         }
       }, 100);
     });
   }
-
   initFontSelector(callback) {
     fontManager.getAvailableFonts((fonts) => {
       let fonts_sort_condition = (font1, font2) => {
@@ -464,6 +474,11 @@ class ApplyingEditor {
         callback
       );
     });
+  }
+  is_operation_allowed() {
+    return !this.isTextSetting && !this.isSampledDataLoading &&
+           !this.isDataApplying && !this.isTextAnalysing &&
+           !this.isTextKerning && !this.isImagesStoring;
   }
 }
 

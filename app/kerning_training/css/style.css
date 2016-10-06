@@ -5,7 +5,7 @@ body {
           user-select: none;
   cursor: default; }
 
-div.loading-curtain {
+.loading-curtain {
   display: inline-block;
   position: absolute;
   width: 100%;
@@ -15,5 +15,5 @@ div.loading-curtain {
   left: 0;
   background-color: rgba(20, 20, 20, 0.8); }
 
-div.hidden {
+.hidden {
   display: none; }
