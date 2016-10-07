@@ -399,8 +399,17 @@ class ApplyingEditor {
       ]
     };
     dialog.showOpenDialog(focusedWindow, options, (file) => {
+      // Error handling
       if (file == undefined ||
-          file[0].indexOf('.json') != file[0].length-5) { return; }
+          file[0].indexOf('.json') != file[0].length-5) {
+        this.isTextSetting = false;
+        this.isSampledDataLoading = false;
+        this.isDataApplying = false;
+        this.isTextAnalysing = false;
+        this.isTextKerning = false;
+        this.isImagesStoring = false;
+        return;
+      }
       fs.readFile(file[0], 'utf8', (error, rawData) => {
         if (error) { return; }
         this.isSampledDataLoaded = false;
