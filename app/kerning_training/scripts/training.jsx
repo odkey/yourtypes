@@ -287,7 +287,7 @@ class Training {
     });
   }
   analyseCharDensities() {
-    console.log('Start to analying char densities.');
+    console.log('Start to analysing char densities.');
     this.isDataAnalysed = false;
     this.isDataAnalysing = true;
     this.densities = {};
@@ -375,7 +375,6 @@ class Training {
               promises.push(sum_up(element, index, 'right-bottom'));
             }
           }
-          // promises.push(sum_up(element, index));
         });
         promises.push(() => {
           const letter = element.char;
@@ -386,6 +385,7 @@ class Training {
           const leftDensity = (leftTopDensity + leftBottomDensity) / 2.0;
           const rightDensity = (rightTopDensity + rightBottomDensity) / 2.0;
           const density = (leftDensity + rightDensity) / 2.0;
+          this.densities[letter] = new Object();
           this.densities[letter]['left_top'] = leftTopDensity;
           this.densities[letter]['left_bottom'] = leftBottomDensity;
           this.densities[letter]['right_top'] = rightTopDensity;
@@ -397,8 +397,7 @@ class Training {
           if (this.runningCount == this.images.length) {
             this.isDataAnalysed = true;
             this.isDataAnalysing = false;
-            console.log('Data is analysed');
-            console.log('densities: ', this.densities);
+            console.log('Data is analysed', this.densities);
           }
         });
         promises.reduce((prev, curr, index, array) => {
@@ -416,12 +415,39 @@ class Training {
     let merge = (element, index) => {
       return () => {
         return new Promise((resolve, reject) => {
-          let firstDensity = this.densities[element['first_char']];
-          let secondDensity = this.densities[element['second_char']];
-          element['first_density'] = firstDensity;
-          element['second_density'] = secondDensity;
-          element['letter_space'] = element['kerning_value'];
-          element['letter_space_rate'] = element['kerning_value']/fontsize;
+          const letter1 = element['first_char'];
+          const densityList1 = this.densities[letter1];
+          element['first_char'] = new Object();
+          element['first_char']['letter'] = letter1;
+          element['first_char']['densities'] = new Object();
+          element['first_char']['densities'] = {
+            all: densityList1.all,
+            left: densityList1.left,
+            right: densityList1.right,
+            left_top: densityList1.left_top,
+            left_bottom: densityList1.left_bottom,
+            right_top: densityList1.right_top,
+            right_bottom: densityList1.right_bottom
+          };
+          const letter2 = element['second_char'];
+          const densityList2 = this.densities[letter2];
+          element['second_char'] = new Object();
+          element['second_char']['letter'] = letter2;
+          element['second_char']['densities'] = new Object();
+          element['second_char']['densities'] = {
+            all: densityList2.all,
+            left: densityList2.left,
+            right: densityList2.right,
+            left_top: densityList2.left_top,
+            left_bottom: densityList2.left_bottom,
+            right_top: densityList2.right_top,
+            right_bottom: densityList2.right_bottom
+          }
+          element['letter_space'] = new Object();
+          element['letter_space']['px'] = element['kerning_value'];
+          element['letter_space']['em'] = element['kerning_value'] / fontsize;
+          // Clear element
+          delete element['kerning_value'];
           resolve();
         });
       }
