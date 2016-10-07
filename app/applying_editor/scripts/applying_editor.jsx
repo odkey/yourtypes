@@ -19,6 +19,7 @@ const dialog = remote.dialog;
 
 class ApplyingEditor {
   constructor() {
+    // Status booleans
     this.isFontSet = false;
     this.isTextSet = false;
     this.isTextSetting = false;
@@ -33,7 +34,7 @@ class ApplyingEditor {
     this.isImagesStoring = false;
     this.isImagesStored = false;
 
-    this.analysingCount = 0;
+    this.strictness = 'quarter';
 
     this.sampledData = undefined;
     this.densities = undefined;
@@ -50,10 +51,6 @@ class ApplyingEditor {
 
     this.curtain = document.getElementsByClassName('loading-curtain')[0];
     let interval = setInterval(() => {
-
-      // console.log(this.isTextSetting, this.isSampledDataLoading,
-      //             this.isDataApplying, this.isTextAnalysing,
-      //             this.isTextKerning, this.isImagesStoring);
       if(this.is_operation_allowed()) {
         Util.addClass(this.curtain, 'hidden');
       }
@@ -81,14 +78,29 @@ class ApplyingEditor {
   addUIEvents() {
     this.addNewTextInputEvent();
     this.addSampledDataJSONSelectEvent();
-    // this.addApplyingDataToNewTextEvent();
+    this.addStrictnessSelectEvent();
+  }
+  addStrictnessSelectEvent() {
+    let selector =
+      document.getElementsByName('applying-mode-selector-items')[0];
+    selector.addEventListener('change', (event) => {
+      let selectedValue = event.srcElement.selectedOptions[0].value;
+      this.setApplyingMode(selectedValue);
+    });
+  }
+  setApplyingMode(strictness) {
+    if (strictness != 'all' &&
+        strictness != 'half' &&
+        strictness != 'quarter') {
+      console.error('Strictness must be "all", "half" or "quarter": ',
+                    strictness);
+      return;
+    }
+    this.strictness = strictness;
   }
   addFontSelectEvent() {
     let selector = document.getElementsByClassName('font-selector-items')[0];
     selector.addEventListener('change', (event) => {
-      console.log('changed');
-      // if (!this.isStayPhase) { return; }
-      // this.isFontSet = false;
       let selected = selector.options[selector.selectedIndex];
       let name = selected.dataset.postscriptname;
       let path = selected.dataset.path;
@@ -135,9 +147,7 @@ class ApplyingEditor {
     this.setFontStyle(fontname, fontpath);
   }
   setFontStyle(name, path) {
-    // this.isTextRendered = false;
     this.isFontSet = false;
-    // console.log('applying font', this.isTextRendered);
     let className = 'additional-font-face-style-tag';
     Util.deleteElementWithClassName(className);
     let style = document.createElement('style');
@@ -256,7 +266,7 @@ class ApplyingEditor {
     this.isTextAnalysed = false;
     this.isTextAnalysing = true;
     this.densities = new Object();
-    this.analysingCount = 0;
+    let analysingCount = 0;
     this.images.forEach((element, index, array) => {
       let canvas = document.createElement('canvas');
       if (!canvas || !canvas.getContext) {
@@ -268,28 +278,93 @@ class ApplyingEditor {
       image.src = `${ element.img.src }`;
       image.onload = () => {
         context.drawImage(image, 0, 0);
-        let imageData = context.getImageData(0, 0, image.width, image.height);
-        let pixels = imageData.data;
+        const imageData =
+          context.getImageData(0, 0, image.width, image.height);
+        const pixels = imageData.data;
+        const width = imageData.width;
+        const height = imageData.height;
+        const area = width * height;
+        const halfArea = area / 2.0;
+        const quarterArea = area / 4.0;
         let sumBlack = 0;
-        let density = 0;
-        let sum_up = (element, index) => {
+        let sumBlackLeft = 0;
+        let sumBlackRight = 0;
+        let sumBlackLeftTop = 0;
+        let sumBlackLeftBottom = 0;
+        let sumBlackRightTop = 0;
+        let sumBlackRightBottom = 0;
+        let sum_up = (element, index, kind) => {
           return () => {
-            return new Promise((resolve) => {
-              sumBlack += element/255.0;
+            return new Promise((resolve, reject) => {
+              if (kind == 'normal' || kind == 'all' || kind == undefined) {
+                sumBlack += element/255.0;
+              }
+              else if (kind == 'left') {
+                sumBlackLeft += element/255.0;
+              }
+              else if (kind == 'right') {
+                sumBlackRight += element/255.0;
+              }
+              else if (kind == 'left-top') {
+                sumBlackLeftTop += element/255.0
+              }
+              else if (kind == 'left-bottom') {
+                sumBlackLeftBottom += element/255.0;
+              }
+              else if (kind == 'right-top') {
+                sumBlackRightTop += element/255.0;
+              }
+              else if (kind == 'right-bottom') {
+                sumBlackRightBottom += element/255.0;
+              }
+              else { console.error();('Illegal kind arg is set'); }
               resolve();
             });
           }
         }
+        let density = 0;
         let promises = new Array();
         pixels.forEach((element, index) => {
           if (index%4 != 3) { return; }
-          promises.push(sum_up(element, index));
+          const i = parseFloat(parseInt(index/4));
+          const x = i%parseFloat(width);
+          const y = i/parseFloat(width);
+          if (x < width/2) {
+            if (y < height/2) {
+              promises.push(sum_up(element, index, 'left-top'));
+            }
+            else {
+              promises.push(sum_up(element, index, 'left-bottom'));
+            }
+          }
+          else if (x >= width/2) {
+            if (y < height/2) {
+              promises.push(sum_up(element, index, 'right-top'));
+            }
+            else {
+              promises.push(sum_up(element, index, 'right-bottom'));
+            }
+          }
         });
         promises.push(() => {
-          density = sumBlack / (image.width * image.height);
-          this.densities[element.char] = density;
-          this.analysingCount++;
-          if (this.analysingCount == this.images.length) {
+          const letter = element.char;
+          const leftTopDensity = sumBlackLeftTop / quarterArea;
+          const leftBottomDensity = sumBlackLeftBottom / quarterArea;
+          const rightTopDensity = sumBlackRightTop / quarterArea;
+          const rightBottomDensity = sumBlackRightBottom / quarterArea;
+          const leftDensity = (leftTopDensity + leftBottomDensity) / 2.0;
+          const rightDensity = (rightTopDensity + rightBottomDensity) / 2.0;
+          const density = (leftDensity + rightDensity) / 2.0;
+          this.densities[letter] = new Object();
+          this.densities[letter]['left_top'] = leftTopDensity;
+          this.densities[letter]['left_bottom'] = leftBottomDensity;
+          this.densities[letter]['right_top'] = rightTopDensity;
+          this.densities[letter]['right_bottom'] = rightBottomDensity;
+          this.densities[letter]['left'] = leftDensity;
+          this.densities[letter]['right'] = rightDensity;
+          this.densities[letter]['all'] = density;
+          analysingCount++;
+          if (analysingCount == this.images.length) {
             this.isTextAnalysed = true;
             this.isTextAnalysing = false;
             console.log('New text is analysed', this.densities);
@@ -345,45 +420,6 @@ class ApplyingEditor {
     promises.reduce((prev, curr, index, array) => {
       return prev.then(curr);
     }, Promise.resolve());
-  }
-  analyse_char(element, index) {
-    return () => {
-      return new Promise((resolve, reject) => {
-        html2canvas(element, {
-          onrendered: (canvas) => {
-            const width = canvas.width;
-            const height = canvas.height;
-            let context = canvas.getContext('2d');
-            let pixels =
-              context.getImageData(0, 0, width, height).data;
-            let sumBlack = 0;
-            let density = 0;
-            let charactor = element.innerText;
-            let sum_up = (element, index) => {
-              return () => {
-                return new Promise((resolve, reject) => {
-                  sumBlack += element/255.0;
-                  resolve();
-                });
-              }
-            }
-            let promises = [];
-            pixels.forEach((element, index) => {
-              if (index%4 != 3) { return; }
-              promises.push(sum_up(element, index));
-            });
-            promises.push(() => {
-              density = sumBlack / (width * height);
-              this.densities[charactor] = density;
-            });
-            promises.reduce((prev, curr, index, array) => {
-              return prev.then(curr);
-            }, Promise.resolve());
-            resolve();
-          }
-        });
-      });
-    }
   }
   distance_square(pointX, pointY, pivotX, pivotY) {
     let diffX = pivotX - pointX;

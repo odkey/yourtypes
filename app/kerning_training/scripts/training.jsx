@@ -46,12 +46,6 @@ class Training {
     // Char images
     this.images = new Array();
     this.densities = undefined;
-    this.leftDensities = undefined;
-    this.rightDensities = undefined;
-    this.leftTopDensities = undefined;
-    this.leftBottomDensities = undefined;
-    this.rightTopDensities = undefined;
-    this.rightBottomDensities = undefined;
     this.zip = new JSZip();
     // Sample words
     this.sampleWords = {
@@ -139,12 +133,6 @@ class Training {
     this.result = { values: new Array() };
     this.images = new Array();
     this.densities = undefined;
-    this.leftDensities = undefined;
-    this.rightDensities = undefined;
-    this.leftTopDensities = undefined;
-    this.leftBottomDensities = undefined;
-    this.rightTopDensities = undefined;
-    this.rightBottomDensities = undefined;
     this.isDataPreparing = false;
   }
   addKerningSamplingFinishEvent() {
@@ -290,13 +278,7 @@ class Training {
     console.log('Start to analysing char densities.');
     this.isDataAnalysed = false;
     this.isDataAnalysing = true;
-    this.densities = {};
-    this.firstHalfDensities = {};
-    this.secondHalfDensities = {};
-    this.leftTopDensities = {};
-    this.leftBottomDensities = {};
-    this.rightTopDensities = {};
-    this.rightBottomDensities = {};
+    this.densities = new Object();
     this.runningCount = 0;
     this.images.forEach((element, index) => {
       let canvas = document.createElement('canvas');
