@@ -46,6 +46,12 @@ class Training {
     // Char images
     this.images = new Array();
     this.densities = undefined;
+    this.leftDensities = undefined;
+    this.rightDensities = undefined;
+    this.leftTopDensities = undefined;
+    this.leftBottomDensities = undefined;
+    this.rightTopDensities = undefined;
+    this.rightBottomDensities = undefined;
     this.zip = new JSZip();
     // Sample words
     this.sampleWords = {
@@ -133,6 +139,12 @@ class Training {
     this.result = { values: new Array() };
     this.images = new Array();
     this.densities = undefined;
+    this.leftDensities = undefined;
+    this.rightDensities = undefined;
+    this.leftTopDensities = undefined;
+    this.leftBottomDensities = undefined;
+    this.rightTopDensities = undefined;
+    this.rightBottomDensities = undefined;
     this.isDataPreparing = false;
   }
   addKerningSamplingFinishEvent() {
@@ -279,6 +291,12 @@ class Training {
     this.isDataAnalysed = false;
     this.isDataAnalysing = true;
     this.densities = {};
+    this.firstHalfDensities = {};
+    this.secondHalfDensities = {};
+    this.leftTopDensities = {};
+    this.leftBottomDensities = {};
+    this.rightTopDensities = {};
+    this.rightBottomDensities = {};
     this.runningCount = 0;
     this.images.forEach((element, index) => {
       let canvas = document.createElement('canvas');
@@ -291,15 +309,46 @@ class Training {
       image.src = `${ element.img.src }`;
       image.onload = () => {
         context.drawImage(image, 0, 0);
-        let imageData =
+        const imageData =
           context.getImageData(0, 0, image.width, image.height);
-        let pixels = imageData.data;
+        const pixels = imageData.data;
+        const width = imageData.width;
+        const height = imageData.height;
+        const area = width * height;
+        const halfArea = area / 2.0;
+        const quaterArea = area / 4.0;
         let sumBlack = 0;
-        let density = 0;
-        let sum_up = (element, index) => {
+        let sumBlackLeft = 0;
+        let sumBlackRight = 0;
+        let sumBlackLeftTop = 0;
+        let sumBlackLeftBottom = 0;
+        let sumBlackRightTop = 0;
+        let sumBlackRightBottom = 0;
+        let sum_up = (element, index, kind) => {
           return () => {
             return new Promise((resolve, reject) => {
-              sumBlack += element/255.0;
+              if (kind == 'normal' || kind == 'all' || kind == undefined) {
+                sumBlack += element/255.0;
+              }
+              else if (kind == 'left') {
+                sumBlackLeft += element/255.0;
+              }
+              else if (kind == 'right') {
+                sumBlackRight += element/255.0;
+              }
+              else if (kind == 'left-top') {
+                sumBlackLeftTop += element/255.0
+              }
+              else if (kind == 'left-bottom') {
+                sumBlackLeftBottom += element/255.0;
+              }
+              else if (kind == 'right-top') {
+                sumBlackRightTop += element/255.0;
+              }
+              else if (kind == 'right-bottom') {
+                sumBlackRightBottom += element/255.0;
+              }
+              else { console.error();('Illegal kind arg is set'); }
               resolve();
             });
           }
@@ -307,16 +356,49 @@ class Training {
         let promises = new Array();
         pixels.forEach((element, index) => {
           if (index%4 != 3) { return; }
-          promises.push(sum_up(element, index));
+          const i = parseFloat(parseInt(index/4));
+          const x = i%parseFloat(width);
+          const y = i/parseFloat(width);
+          if (x < width/2) {
+            if (y < height/2) {
+              promises.push(sum_up(element, index, 'left-top'));
+            }
+            else {
+              promises.push(sum_up(element, index, 'left-bottom'));
+            }
+          }
+          else if (x >= width/2) {
+            if (y < height/2) {
+              promises.push(sum_up(element, index, 'right-top'));
+            }
+            else {
+              promises.push(sum_up(element, index, 'right-bottom'));
+            }
+          }
+          // promises.push(sum_up(element, index));
         });
         promises.push(() => {
-          density = sumBlack / (image.width*image.height);
-          this.densities[element.char] = density;
+          const letter = element.char;
+          const leftTopDensity = sumBlackLeftTop / quaterArea;
+          const leftBottomDensity = sumBlackLeftBottom / quaterArea;
+          const rightTopDensity = sumBlackRightTop / quaterArea;
+          const rightBottomDensity = sumBlackRightBottom / quaterArea;
+          const leftDensity = (leftTopDensity + leftBottomDensity) / 2.0;
+          const rightDensity = (rightTopDensity + rightBottomDensity) / 2.0;
+          const density = (leftDensity + rightDensity) / 2.0;
+          this.densities[letter]['left_top'] = leftTopDensity;
+          this.densities[letter]['left_bottom'] = leftBottomDensity;
+          this.densities[letter]['right_top'] = rightTopDensity;
+          this.densities[letter]['right_bottom'] = rightBottomDensity;
+          this.densities[letter]['left'] = leftDensity;
+          this.densities[letter]['right'] = rightDensity;
+          this.densities[letter]['all'] = density;
           this.runningCount++;
           if (this.runningCount == this.images.length) {
             this.isDataAnalysed = true;
             this.isDataAnalysing = false;
-            console.log('Data is analysed', this.densities);
+            console.log('Data is analysed');
+            console.log('densities: ', this.densities);
           }
         });
         promises.reduce((prev, curr, index, array) => {
