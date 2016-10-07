@@ -316,7 +316,7 @@ class Training {
         const height = imageData.height;
         const area = width * height;
         const halfArea = area / 2.0;
-        const quaterArea = area / 4.0;
+        const quarterArea = area / 4.0;
         let sumBlack = 0;
         let sumBlackLeft = 0;
         let sumBlackRight = 0;
@@ -379,10 +379,10 @@ class Training {
         });
         promises.push(() => {
           const letter = element.char;
-          const leftTopDensity = sumBlackLeftTop / quaterArea;
-          const leftBottomDensity = sumBlackLeftBottom / quaterArea;
-          const rightTopDensity = sumBlackRightTop / quaterArea;
-          const rightBottomDensity = sumBlackRightBottom / quaterArea;
+          const leftTopDensity = sumBlackLeftTop / quarterArea;
+          const leftBottomDensity = sumBlackLeftBottom / quarterArea;
+          const rightTopDensity = sumBlackRightTop / quarterArea;
+          const rightBottomDensity = sumBlackRightBottom / quarterArea;
           const leftDensity = (leftTopDensity + leftBottomDensity) / 2.0;
           const rightDensity = (rightTopDensity + rightBottomDensity) / 2.0;
           const density = (leftDensity + rightDensity) / 2.0;
