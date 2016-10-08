@@ -1,4 +1,4 @@
-// YourTypes kerning_training/scripts/view/font_selector_view.jsx
+// YourTypes common/scripts/view/font_selector_view.jsx
 // Coded by Yota Odaka
 
 'use strict';

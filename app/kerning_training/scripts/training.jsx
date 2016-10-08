@@ -275,10 +275,10 @@ class Training {
     });
   }
   analyseCharDensities() {
-    console.log('Start to analying char densities.');
+    console.log('Start to analysing char densities.');
     this.isDataAnalysed = false;
     this.isDataAnalysing = true;
-    this.densities = {};
+    this.densities = new Object();
     this.runningCount = 0;
     this.images.forEach((element, index) => {
       let canvas = document.createElement('canvas');
@@ -291,15 +291,46 @@ class Training {
       image.src = `${ element.img.src }`;
       image.onload = () => {
         context.drawImage(image, 0, 0);
-        let imageData =
+        const imageData =
           context.getImageData(0, 0, image.width, image.height);
-        let pixels = imageData.data;
+        const pixels = imageData.data;
+        const width = imageData.width;
+        const height = imageData.height;
+        const area = width * height;
+        const halfArea = area / 2.0;
+        const quarterArea = area / 4.0;
         let sumBlack = 0;
-        let density = 0;
-        let sum_up = (element, index) => {
+        let sumBlackLeft = 0;
+        let sumBlackRight = 0;
+        let sumBlackLeftTop = 0;
+        let sumBlackLeftBottom = 0;
+        let sumBlackRightTop = 0;
+        let sumBlackRightBottom = 0;
+        let sum_up = (element, index, kind) => {
           return () => {
             return new Promise((resolve, reject) => {
-              sumBlack += element/255.0;
+              if (kind == 'normal' || kind == 'all' || kind == undefined) {
+                sumBlack += element/255.0;
+              }
+              else if (kind == 'left') {
+                sumBlackLeft += element/255.0;
+              }
+              else if (kind == 'right') {
+                sumBlackRight += element/255.0;
+              }
+              else if (kind == 'left-top') {
+                sumBlackLeftTop += element/255.0
+              }
+              else if (kind == 'left-bottom') {
+                sumBlackLeftBottom += element/255.0;
+              }
+              else if (kind == 'right-top') {
+                sumBlackRightTop += element/255.0;
+              }
+              else if (kind == 'right-bottom') {
+                sumBlackRightBottom += element/255.0;
+              }
+              else { console.error();('Illegal kind arg is set'); }
               resolve();
             });
           }
@@ -307,11 +338,43 @@ class Training {
         let promises = new Array();
         pixels.forEach((element, index) => {
           if (index%4 != 3) { return; }
-          promises.push(sum_up(element, index));
+          const i = parseFloat(parseInt(index/4));
+          const x = i%parseFloat(width);
+          const y = i/parseFloat(width);
+          if (x < width/2) {
+            if (y < height/2) {
+              promises.push(sum_up(element, index, 'left-top'));
+            }
+            else {
+              promises.push(sum_up(element, index, 'left-bottom'));
+            }
+          }
+          else if (x >= width/2) {
+            if (y < height/2) {
+              promises.push(sum_up(element, index, 'right-top'));
+            }
+            else {
+              promises.push(sum_up(element, index, 'right-bottom'));
+            }
+          }
         });
         promises.push(() => {
-          density = sumBlack / (image.width*image.height);
-          this.densities[element.char] = density;
+          const letter = element.char;
+          const leftTopDensity = sumBlackLeftTop / quarterArea;
+          const leftBottomDensity = sumBlackLeftBottom / quarterArea;
+          const rightTopDensity = sumBlackRightTop / quarterArea;
+          const rightBottomDensity = sumBlackRightBottom / quarterArea;
+          const leftDensity = (leftTopDensity + leftBottomDensity) / 2.0;
+          const rightDensity = (rightTopDensity + rightBottomDensity) / 2.0;
+          const density = (leftDensity + rightDensity) / 2.0;
+          this.densities[letter] = new Object();
+          this.densities[letter]['left_top'] = leftTopDensity;
+          this.densities[letter]['left_bottom'] = leftBottomDensity;
+          this.densities[letter]['right_top'] = rightTopDensity;
+          this.densities[letter]['right_bottom'] = rightBottomDensity;
+          this.densities[letter]['left'] = leftDensity;
+          this.densities[letter]['right'] = rightDensity;
+          this.densities[letter]['all'] = density;
           this.runningCount++;
           if (this.runningCount == this.images.length) {
             this.isDataAnalysed = true;
@@ -334,12 +397,39 @@ class Training {
     let merge = (element, index) => {
       return () => {
         return new Promise((resolve, reject) => {
-          let firstDensity = this.densities[element['first_char']];
-          let secondDensity = this.densities[element['second_char']];
-          element['first_density'] = firstDensity;
-          element['second_density'] = secondDensity;
-          element['letter_space'] = element['kerning_value'];
-          element['letter_space_rate'] = element['kerning_value']/fontsize;
+          const letter1 = element['first_char'];
+          const densityList1 = this.densities[letter1];
+          element['first_char'] = new Object();
+          element['first_char']['letter'] = letter1;
+          element['first_char']['densities'] = new Object();
+          element['first_char']['densities'] = {
+            all: densityList1.all,
+            left: densityList1.left,
+            right: densityList1.right,
+            left_top: densityList1.left_top,
+            left_bottom: densityList1.left_bottom,
+            right_top: densityList1.right_top,
+            right_bottom: densityList1.right_bottom
+          };
+          const letter2 = element['second_char'];
+          const densityList2 = this.densities[letter2];
+          element['second_char'] = new Object();
+          element['second_char']['letter'] = letter2;
+          element['second_char']['densities'] = new Object();
+          element['second_char']['densities'] = {
+            all: densityList2.all,
+            left: densityList2.left,
+            right: densityList2.right,
+            left_top: densityList2.left_top,
+            left_bottom: densityList2.left_bottom,
+            right_top: densityList2.right_top,
+            right_bottom: densityList2.right_bottom
+          }
+          element['letter_space'] = new Object();
+          element['letter_space']['px'] = element['kerning_value'];
+          element['letter_space']['em'] = element['kerning_value'] / fontsize;
+          // Clear element
+          delete element['kerning_value'];
           resolve();
         });
       }
