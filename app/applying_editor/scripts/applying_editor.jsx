@@ -243,11 +243,29 @@ class ApplyingEditor {
 
     });
     let interval = setInterval(() => {
-      if (this.applyingCountAll == chars.length-1) {
-        clearInterval(interval);
-        this.isDataApplied = true;
-        this.isDataApplying = false;
-        console.log('Letter space data is applied');
+      if (this.strictness == 'all') {
+        if (this.applyingCountAll == chars.length-1) {
+          clearInterval(interval);
+          this.isDataApplied = true;
+          this.isDataApplying = false;
+          console.log('Letter space data is applied');
+        }
+      }
+      else if (this.strictness == 'half') {
+        if (this.applyingCountHalf == chars.length-1) {
+          clearInterval(interval);
+          this.isDataApplied = true;
+          this.isDataApplying = false;
+          console.log('Letter space data is applied');
+        }
+      }
+      else if (this.strictness == 'quarter') {
+        if (this.applyingCountQuarter == chars.length-1) {
+          clearInterval(interval);
+          this.isDataApplied = true;
+          this.isDataApplying = false;
+          console.log('Letter space data is applied');
+        }
       }
     }, 100);
   }
@@ -273,13 +291,37 @@ class ApplyingEditor {
       if (searchCount == this.sampledData.length) {
         clearInterval(interval);
         element.style.letterSpacing =
-          `${ this.sampledData[nearest.index].letter_space_rate }em`;
+          `${ this.sampledData[nearest.index].letter_space.em }em`;
         this.applyingCountAll++;
       }
     }, 100);
   }
   applyLetterSpacesHalf(element, index, array) {
-
+    let nearest = { squaredDistance: 0, index: -1 };
+    let firstDensity =
+      parseFloat(this.densities[array[index].textContent].right);
+    let secondDensity =
+      parseFloat(this.densities[array[index+1].textContent].left);
+    let searchCount = 0;
+    this.sampledData.forEach((element, index, array) => {
+      let sampleFirstDenstiy = parseFloat(element.first_char.densities.right);
+      let sampleSecondDensity = parseFloat(element.second_char.densities.left);
+      let diffFirst = firstDensity - sampleFirstDenstiy;
+      let diffSecond = secondDensity - sampleSecondDensity;
+      let squaredDistance = diffFirst * diffFirst + diffSecond * diffSecond;
+      if (searchCount == 0 || squaredDistance < nearest.squaredDistance) {
+        nearest = { index: index, squaredDistance: squaredDistance };
+      }
+      searchCount++;
+    });
+    let interval = setInterval(() => {
+      if (searchCount == this.sampledData.length) {
+        clearInterval(interval);
+        element.style.letterSpacing =
+          `${ this.sampledData[nearest.index].letter_space.em }em`;
+        this.applyingCountHalf++;
+      }
+    }, 100);
   }
   applyLetterSpacesQuarter(element, index, array) {
 
@@ -479,40 +521,38 @@ class ApplyingEditor {
         this.applyFont(this.fontInfo.postscriptName);
         let runningCount = 0;
         json.values.forEach((element, index) => {
-          if (element.first_density > 0 && element.second_density > 0) {
-            const item = {
-              first_char: {
-                densities: {
-                  all: element.first_char.densities.all,
-                  left: element.first_char.densities.left,
-                  left_bottom: element.first_char.densities.left_bottom,
-                  left_top: element.first_char.densities.left_top,
-                  right: element.first_char.densities.right,
-                  right_bottom: element.first_char.densities.right_bottom,
-                  right_top: element.first_char.densities.right_top,
-                },
-                letter: element.first_char.letter
+          const item = {
+            first_char: {
+              densities: {
+                all: element.first_char.densities.all,
+                left: element.first_char.densities.left,
+                left_bottom: element.first_char.densities.left_bottom,
+                left_top: element.first_char.densities.left_top,
+                right: element.first_char.densities.right,
+                right_bottom: element.first_char.densities.right_bottom,
+                right_top: element.first_char.densities.right_top,
               },
-              second_char: {
-                densities: {
-                  all: element.second_char.densities.all,
-                  left: element.second_char.densities.left,
-                  left_bottom: element.second_char.densities.left_bottom,
-                  left_top: element.second_char.densities.left_top,
-                  right: element.second_char.densities.right,
-                  right_bottom: element.second_char.densities.right_bottom,
-                  right_top: element.second_char.densities.right_top,
-                },
-                letter: element.second_char.letter
+              letter: element.first_char.letter
+            },
+            second_char: {
+              densities: {
+                all: element.second_char.densities.all,
+                left: element.second_char.densities.left,
+                left_bottom: element.second_char.densities.left_bottom,
+                left_top: element.second_char.densities.left_top,
+                right: element.second_char.densities.right,
+                right_bottom: element.second_char.densities.right_bottom,
+                right_top: element.second_char.densities.right_top,
               },
-              letter_space: {
-                em: element.letter_space.em,
-                px: element.letter_space.px
-              }
-            };
-            this.sampledData.push(item);
-            runningCount++;
-          }
+              letter: element.second_char.letter
+            },
+            letter_space: {
+              em: element.letter_space.em,
+              px: element.letter_space.px
+            }
+          };
+          this.sampledData.push(item);
+          runningCount++;
         });
         let interval = setInterval(() => {
           if (runningCount == json.values.length) {
