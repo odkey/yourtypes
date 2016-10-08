@@ -53,12 +53,20 @@ class ApplyingEditor {
     this.addUIEvents();
 
     this.curtain = document.getElementsByClassName('loading-curtain')[0];
+    this.strictnessSelector =
+      document.getElementsByClassName('applying-mode-selector')[0];
     let interval = setInterval(() => {
       if(this.is_operation_allowed()) {
         Util.addClass(this.curtain, 'hidden');
       }
       else {
         Util.removeClass(this.curtain, 'hidden');
+      }
+      if (!this.isSampledDataLoaded) {
+        Util.addClass(this.strictnessSelector, 'hidden');
+      }
+      else {
+        Util.removeClass(this.strictnessSelector, 'hidden');
       }
       if (this.isSampledDataLoaded && !this.isSampledDataLoading) {
         this.enableNewTextInput();
@@ -100,6 +108,9 @@ class ApplyingEditor {
       return;
     }
     this.strictness = strictness;
+    let event = document.createEvent('HTMLEvents');
+    event.initEvent('change', false, true);
+    document.getElementsByName('new-text-input')[0].dispatchEvent(event);
   }
   addFontSelectEvent() {
     let selector = document.getElementsByClassName('font-selector-items')[0];
