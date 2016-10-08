@@ -35,6 +35,9 @@ class ApplyingEditor {
     this.isImagesStored = false;
 
     this.strictness = 'quarter';
+    this.applyingCountAll = 0;
+    this.applyingCountHalf = 0;
+    this.applyingCountQuarter = 0;
 
     this.sampledData = undefined;
     this.densities = undefined;
@@ -228,38 +231,56 @@ class ApplyingEditor {
     let applyingCount = 0;
     chars.forEach((element, index, array) => {
       if (index == array.length - 1) { return; }
-      let nearest = { squaredDistance: 0, index: -1 };
-      let firstDensity = parseFloat(this.densities[array[index].textContent]);
-      let secondDensity = parseFloat(this.densities[array[index+1].textContent]);
-      let searchCount = 0;
-      this.sampledData.forEach((element, index, array) => {
-        let sampleFirstDenstiy = parseFloat(element.first_density);
-        let sampleSecondDensity = parseFloat(element.second_density);
-        let diffFirst = firstDensity - sampleFirstDenstiy;
-        let diffSecond = secondDensity - sampleSecondDensity;
-        let squaredDistance = diffFirst * diffFirst + diffSecond * diffSecond;
-        if (searchCount == 0 || squaredDistance < nearest.squaredDistance) {
-          nearest = { index: index, squaredDistance: squaredDistance};
-        }
-        searchCount++;
-      });
-      let interval = setInterval(() => {
-        if (searchCount == this.sampledData.length) {
-          clearInterval(interval);
-          element.style.letterSpacing =
-            `${ this.sampledData[nearest.index].letter_space_rate }em`;
-          applyingCount++;
-        }
-      }, 100);
+      if (this.strictness == 'all') {
+        this.applyLetterSpacesAll(element, index, array);
+      }
+      else if (this.strictness == 'half') {
+        this.applyLetterSpacesHalf(element, index, array);
+      }
+      else if (this.strictness == 'quarter') {
+        this.applyLetterSpacesQuarter(element, index, array);
+      }
+
     });
     let interval = setInterval(() => {
-      if (applyingCount == chars.length-1) {
+      if (this.applyingCountAll == chars.length-1) {
         clearInterval(interval);
         this.isDataApplied = true;
         this.isDataApplying = false;
         console.log('Letter space data is applied');
       }
     }, 100);
+  }
+  applyLetterSpacesAll(element, index, array) {
+    let nearest = { squaredDistance: 0, index: -1 };
+    let firstDensity = parseFloat(this.densities[array[index].textContent]);
+    let secondDensity = parseFloat(this.densities[array[index+1].textContent]);
+    let searchCount = 0;
+    this.sampledData.forEach((element, index, array) => {
+      let sampleFirstDenstiy = parseFloat(element.first_density);
+      let sampleSecondDensity = parseFloat(element.second_density);
+      let diffFirst = firstDensity - sampleFirstDenstiy;
+      let diffSecond = secondDensity - sampleSecondDensity;
+      let squaredDistance = diffFirst * diffFirst + diffSecond * diffSecond;
+      if (searchCount == 0 || squaredDistance < nearest.squaredDistance) {
+        nearest = { index: index, squaredDistance: squaredDistance};
+      }
+      searchCount++;
+    });
+    let interval = setInterval(() => {
+      if (searchCount == this.sampledData.length) {
+        clearInterval(interval);
+        element.style.letterSpacing =
+          `${ this.sampledData[nearest.index].letter_space_rate }em`;
+        this.applyingCountAll++;
+      }
+    }, 100);
+  }
+  applyLetterSpacesHalf(element, index, array) {
+
+  }
+  applyLetterSpacesQuarter(element, index, array) {
+
   }
   analyseCharImages() {
     if (!this.isImagesStored) { return; }
@@ -458,9 +479,34 @@ class ApplyingEditor {
         json.values.forEach((element, index) => {
           if (element.first_density > 0 && element.second_density > 0) {
             const item = {
-              first_density: element.first_density,
-              second_density: element.second_density,
-              letter_space_rate: element.letter_space_rate
+              first_char: {
+                densities: {
+                  all: element.first_char.densities.all,
+                  left: element.first_char.densities.left,
+                  left_bottom: element.first_char.densities.left_bottom,
+                  left_top: element.first_char.densities.left_top,
+                  right: element.first_char.densities.right,
+                  right_bottom: element.first_char.densities.right_bottom,
+                  right_top: element.first_char.densities.right_top,
+                },
+                letter: element.first_char.letter
+              },
+              second_char: {
+                densities: {
+                  all: element.second_char.densities.all,
+                  left: element.second_char.densities.left,
+                  left_bottom: element.second_char.densities.left_bottom,
+                  left_top: element.second_char.densities.left_top,
+                  right: element.second_char.densities.right,
+                  right_bottom: element.second_char.densities.right_bottom,
+                  right_top: element.second_char.densities.right_top,
+                },
+                letter: element.second_char.letter
+              },
+              letter_space: {
+                em: element.letter_space.em,
+                px: element.letter_space.px
+              }
             };
             this.sampledData.push(item);
             runningCount++;
@@ -491,7 +537,7 @@ class ApplyingEditor {
             event.initEvent('change', false, true);
             document.getElementsByName(
               'new-text-input')[0].dispatchEvent(event);
-            console.log('New text input hange event is fired');
+            console.log('New text input event is fired');
           }
         }
       }, 100);
