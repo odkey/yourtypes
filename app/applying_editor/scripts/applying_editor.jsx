@@ -324,7 +324,44 @@ class ApplyingEditor {
     }, 100);
   }
   applyLetterSpacesQuarter(element, index, array) {
-
+    let nearest = { squaredDistance: 0, index: -1 };
+    let firstTopDensity =
+      parseFloat(this.densities[array[index].textContent].right_top);
+    let firstBottomDensity =
+      parseFloat(this.densities[array[index].textContent].right_bottom);
+    let secondTopDensity =
+      parseFloat(this.densities[array[index+1].textContent].left_top);
+    let secondBottomDensity =
+      parseFloat(this.densities[array[index+1].textContent].left_bottom);
+    let searchCount = 0;
+    this.sampledData.forEach((element, index, array) => {
+      let sampleFirstTopDenstiy =
+        parseFloat(element.first_char.densities.right_top);
+      let sampleFirstBottomDenstiy =
+        parseFloat(element.first_char.densities.right_bottom);
+      let sampleSecondTopDensity =
+        parseFloat(element.second_char.densities.left_top);
+      let sampleSecondBottomDensity =
+        parseFloat(element.second_char.densities.left_bottom);
+      let diff1 = firstTopDensity - sampleFirstTopDenstiy;
+      let diff2 = firstBottomDensity - sampleFirstBottomDenstiy;
+      let diff3 = secondTopDensity - sampleSecondTopDensity;
+      let diff4 = secondBottomDensity - sampleSecondBottomDensity;
+      let squaredDistance =
+        diff1 * diff1 + diff2 * diff2 + diff3 * diff3 + diff4 * diff4;
+      if (searchCount == 0 || squaredDistance < nearest.squaredDistance) {
+        nearest = { index: index, squaredDistance: squaredDistance };
+      }
+      searchCount++;
+    });
+    let interval = setInterval(() => {
+      if (searchCount == this.sampledData.length) {
+        clearInterval(interval);
+        element.style.letterSpacing =
+          `${ this.sampledData[nearest.index].letter_space.em }em`;
+        this.applyingCountQuarter++;
+      }
+    }, 100);
   }
   analyseCharImages() {
     if (!this.isImagesStored) { return; }
