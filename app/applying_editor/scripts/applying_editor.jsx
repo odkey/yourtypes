@@ -253,12 +253,14 @@ class ApplyingEditor {
   }
   applyLetterSpacesAll(element, index, array) {
     let nearest = { squaredDistance: 0, index: -1 };
-    let firstDensity = parseFloat(this.densities[array[index].textContent]);
-    let secondDensity = parseFloat(this.densities[array[index+1].textContent]);
+    let firstDensity =
+      parseFloat(this.densities[array[index].textContent].all);
+    let secondDensity =
+      parseFloat(this.densities[array[index+1].textContent].all);
     let searchCount = 0;
     this.sampledData.forEach((element, index, array) => {
-      let sampleFirstDenstiy = parseFloat(element.first_density);
-      let sampleSecondDensity = parseFloat(element.second_density);
+      let sampleFirstDenstiy = parseFloat(element.first_char.densities.all);
+      let sampleSecondDensity = parseFloat(element.second_char.densities.all);
       let diffFirst = firstDensity - sampleFirstDenstiy;
       let diffSecond = secondDensity - sampleSecondDensity;
       let squaredDistance = diffFirst * diffFirst + diffSecond * diffSecond;
