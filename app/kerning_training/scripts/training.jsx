@@ -36,7 +36,7 @@ class Training {
       // Followings are callback functions
       this.addFontSelectEvent();
       this.applyFontToField();
-      this.setKerningFieldFontSize(50);
+      this.setKerningFieldFontSize(80);
     });
     // Result data
     this.kernedChars = new Array();
@@ -48,10 +48,15 @@ class Training {
     this.densities = undefined;
     this.zip = new JSZip();
     // Sample words
+    this.defaultTextTitle = "lorem_ipsum";
     this.sampleWords = {
-      words: require('../../data/sample_text/kumo_no_ito/data.json')["words"],
+      words: require(`../../data/sample_text/${ this.defaultTextTitle }/data.json`)["words"],
       index: 0
-    }
+    };
+    // this.sampleWords = {
+    //   words: require('../../data/sample_text/kumo_no_ito/data.json')["words"],
+    //   index: 0
+    // }
     this.text = this.sampleWords.words[this.sampleWords.index];
     this.setTrainingText(this.text, () => {
       this.enableCharsToBeDragged();

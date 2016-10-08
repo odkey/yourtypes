@@ -228,7 +228,6 @@ class ApplyingEditor {
     this.isDataApplying = true;
     let chars = document.getElementsByClassName(
       'designed-text-field-chars')[0].childNodes;
-    let applyingCount = 0;
     chars.forEach((element, index, array) => {
       if (index == array.length - 1) { return; }
       if (this.strictness == 'all') {
@@ -240,36 +239,26 @@ class ApplyingEditor {
       else if (this.strictness == 'quarter') {
         this.applyLetterSpacesQuarter(element, index, array);
       }
-
     });
     let interval = setInterval(() => {
-      if (this.strictness == 'all') {
-        if (this.applyingCountAll == chars.length-1) {
-          clearInterval(interval);
-          this.isDataApplied = true;
-          this.isDataApplying = false;
-          console.log('Letter space data is applied');
-        }
-      }
-      else if (this.strictness == 'half') {
-        if (this.applyingCountHalf == chars.length-1) {
-          clearInterval(interval);
-          this.isDataApplied = true;
-          this.isDataApplying = false;
-          console.log('Letter space data is applied');
-        }
-      }
-      else if (this.strictness == 'quarter') {
-        if (this.applyingCountQuarter == chars.length-1) {
-          clearInterval(interval);
-          this.isDataApplied = true;
-          this.isDataApplying = false;
-          console.log('Letter space data is applied');
-        }
+      if ((this.strictness == 'all' &&
+            this.applyingCountAll == chars.length-1) ||
+          (this.strictness == 'half' &&
+            this.applyingCountHalf == chars.length-1) ||
+          (this.strictness == 'quarter' &&
+            this.applyingCountQuarter == chars.length-1)) {
+        clearInterval(interval);
+        this.isDataApplied = true;
+        this.isDataApplying = false;
+        this.applyingCountAll = 0;
+        this.applyingCountHalf = 0;
+        this.applyingCountQuarter = 0;
+        console.log('Letter space data is applied');
       }
     }, 100);
   }
   applyLetterSpacesAll(element, index, array) {
+    this.applyingCountAll = 0;
     let nearest = { squaredDistance: 0, index: -1 };
     let firstDensity =
       parseFloat(this.densities[array[index].textContent].all);
@@ -297,6 +286,7 @@ class ApplyingEditor {
     }, 100);
   }
   applyLetterSpacesHalf(element, index, array) {
+    this.applyingCountHalf = 0;
     let nearest = { squaredDistance: 0, index: -1 };
     let firstDensity =
       parseFloat(this.densities[array[index].textContent].right);
@@ -324,6 +314,7 @@ class ApplyingEditor {
     }, 100);
   }
   applyLetterSpacesQuarter(element, index, array) {
+    this.applyingCountQuarter = 0;
     let nearest = { squaredDistance: 0, index: -1 };
     let firstTopDensity =
       parseFloat(this.densities[array[index].textContent].right_top);
@@ -484,6 +475,7 @@ class ApplyingEditor {
     this.images = new Array();
     const container =
       document.getElementsByClassName('designed-text-field-chars')[0];
+    console.log(container);
     let chars = container.childNodes;
     let runningCount = 0;
     let store_char = (element, index, array) => {
@@ -506,6 +498,7 @@ class ApplyingEditor {
       }
     }
     let promises = new Array();
+    let countOffset = 0;
     chars.forEach((element, index, array) => {
       promises.push(store_char(element, index, array));
     });
