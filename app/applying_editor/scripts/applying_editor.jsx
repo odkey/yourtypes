@@ -34,7 +34,6 @@ class ApplyingEditor {
     this.isImagesStoring = false;
     this.isImagesStored = false;
 
-    this.strictness = 'quarter';
     this.applyingCountDefault = 0;
     this.applyingCountLite = 0;
     this.applyingCountNormal = 0;
@@ -52,7 +51,16 @@ class ApplyingEditor {
       this.applyFont();
     });
     this.addUIEvents();
-
+    // To disable drag & drop event
+    document.addEventListener('dragover', (event) => {
+      event.preventDefault();
+      return false;
+    }, false);
+    document.addEventListener('drop', (event) => {
+      event.preventDefault();
+      return false;
+    }, false);
+    // To disallow any operation while some processes haven't finished
     this.curtain = document.getElementsByClassName('loading-curtain')[0];
     this.strictnessSelector =
       document.getElementsByName('applying-mode-selector-items')[0];
@@ -93,6 +101,13 @@ class ApplyingEditor {
       let path = selected.dataset.path;
       this.setFontStyle(name, path);
     });
+  }
+  setFontSize(size) {
+    let  fields = document.getElementsByClassName('designed-text-field');
+    for (let i = 0; i < fields.length; i++) {
+      console.log(fields[i].style.fontSize);
+      fields[i].style.fontSize = `${ size }px`
+    }
   }
   findFont(name) {
     let isExisted = false;
@@ -589,6 +604,7 @@ class ApplyingEditor {
           monospace: json.info.monospace,
           postscriptName: json.info.postscript_name
         };
+        this.setFontSize(this.fontInfo.size);
         this.applyFont(this.fontInfo.postscriptName);
         let runningCount = 0;
         json.values.forEach((element, index) => {

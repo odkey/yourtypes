@@ -48,21 +48,27 @@ class Training {
     this.densities = undefined;
     this.zip = new JSZip();
     // Sample words
-    this.defaultTextTitle = "lorem_ipsum";
+    // lorem_ipsum, kumo_no_ito, vuitton
+    this.defaultTextTitle = "vuitton";
     this.sampleWords = {
       words: require(`../../data/sample_text/${ this.defaultTextTitle }/data.json`)["words"],
       index: 0
     };
-    // this.sampleWords = {
-    //   words: require('../../data/sample_text/kumo_no_ito/data.json')["words"],
-    //   index: 0
-    // }
     this.text = this.sampleWords.words[this.sampleWords.index];
     this.setTrainingText(this.text, () => {
       this.enableCharsToBeDragged();
     });
     // UI events
     this.addUIEvents();
+    // To disable drag & drop event
+    document.addEventListener('dragover', (event) => {
+      event.preventDefault();
+      return false;
+    }, false);
+    document.addEventListener('drop', (event) => {
+      event.preventDefault();
+      return false;
+    }, false);
     // Wrappers for UI
     this.curtain =
       document.getElementsByClassName('loading-curtain')[0];
@@ -76,7 +82,7 @@ class Training {
       document.getElementsByClassName('export-as-json')[0];
     this.exportImagesButtonWrapper =
       document.getElementsByClassName('export-char-images')[0];
-    // Watch status
+    // Watch status and disallow any operation while some processes is running
     let interval = setInterval(() => {
       // When some process is running,
       // loading curtain is drawn to reject user input

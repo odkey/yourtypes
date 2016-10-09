@@ -19,4 +19,4 @@ body {
   display: none; }
 
 div.designed-text-field div.designed-text-field-chars span {
-  font-size: 50px; }
+  font-size: inherit; }
