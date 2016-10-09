@@ -48,8 +48,8 @@ class Training {
     this.densities = undefined;
     this.zip = new JSZip();
     // Sample words
-    // lorem_ipsum, kumo_no_ito, vuitton
-    this.defaultTextTitle = "vuitton";
+    // lorem_ipsum, kumo_no_ito, vuitton, muji
+    this.defaultTextTitle = "muji";
     this.sampleWords = {
       words: require(`../../data/sample_text/${ this.defaultTextTitle }/data.json`)["words"],
       index: 0
