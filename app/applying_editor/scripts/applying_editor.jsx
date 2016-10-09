@@ -54,7 +54,7 @@ class ApplyingEditor {
 
     this.curtain = document.getElementsByClassName('loading-curtain')[0];
     this.strictnessSelector =
-      document.getElementsByClassName('applying-mode-selector')[0];
+      document.getElementsByName('applying-mode-selector-items')[0];
     let interval = setInterval(() => {
       if(this.is_operation_allowed()) {
         Util.addClass(this.curtain, 'hidden');
@@ -63,10 +63,10 @@ class ApplyingEditor {
         Util.removeClass(this.curtain, 'hidden');
       }
       if (!this.isSampledDataLoaded) {
-        Util.addClass(this.strictnessSelector, 'hidden');
+        this.strictnessSelector.disabled = true;
       }
       else {
-        Util.removeClass(this.strictnessSelector, 'hidden');
+        this.strictnessSelector.disabled = false;
       }
       if (this.isSampledDataLoaded && !this.isSampledDataLoading) {
         this.enableNewTextInput();
