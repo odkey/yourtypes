@@ -9,17 +9,20 @@ export default class DesignedTextView extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      text: this.props.text
+      text: this.props.text,
+      additionalClass: this.props.additionalClass
     };
+    console.log(this.props.additionalClass);
   }
   render() {
-    const className = 'designed-text-field-chars';
+    const className =
+      `designed-text-field-chars ${ this.props.additionalClass }`;
     const style = {
       letterSpacing: '0em'
     };
     let chars = [];
     for (let i = 0; i < this.props.text.length; i++) {
-      chars.push(<span key={ i } style={ style }>{ this.props.text[i] }</span>);
+      chars.push(<span key={ i } style={ style } className={ className }>{ this.props.text[i] }</span>);
     }
     return (
       <div className={ className }>
