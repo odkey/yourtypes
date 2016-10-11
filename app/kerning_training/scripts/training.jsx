@@ -49,7 +49,7 @@ class Training {
     this.zip = new JSZip();
     // Sample words
     // lorem_ipsum, kumo_no_ito, vuitton, muji
-    this.defaultTextTitle = "muji";
+    this.defaultTextTitle = "lorem_ipsum";
     this.sampleWords = {
       words: require(`../../data/sample_text/${ this.defaultTextTitle }/data.json`)["words"],
       index: 0
@@ -116,8 +116,27 @@ class Training {
     this.addExportCharImagesEvent();
     this.addAdvanceSampleWordEvent();
     this.addKerningSamplingFinishEvent();
+    this.addSampleTextSelectEvent();
 
     this.addSamplingStartEvent();
+  }
+  addSampleTextSelectEvent() {
+    let selector =
+      document.getElementsByName('sample-selector-items')[0];
+    selector.addEventListener('change', (event) => {
+      if (!this.isStayPhase) { return; }
+      const selectedValue = selector.options[selector.selectedIndex].value;
+      this.sampleWords = {
+        words: require(`../../data/sample_text/${ selectedValue }/data.json`)["words"],
+        index: 0
+      };
+      this.text = this.sampleWords.words[this.sampleWords.index];
+      this.setTrainingText(this.text, () => {
+        this.enableCharsToBeDragged();
+        this.applyFontToField();
+        this.setKerningFieldFontSize(80);
+      });
+    });
   }
   addSamplingStartEvent() {
     let button =
