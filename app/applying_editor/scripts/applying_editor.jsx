@@ -127,7 +127,6 @@ class ApplyingEditor {
     let event = document.createEvent('HTMLEvents');
     event.initEvent('change', false, true);
     toggles.forEach((element, index, array) => {
-      console.log(element);
       element.checked = true;
       element.dispatchEvent(event);
     });
