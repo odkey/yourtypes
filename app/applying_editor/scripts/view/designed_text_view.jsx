@@ -12,7 +12,6 @@ export default class DesignedTextView extends React.Component {
       text: this.props.text,
       additionalClass: this.props.additionalClass
     };
-    console.log(this.props.additionalClass);
   }
   render() {
     const className =

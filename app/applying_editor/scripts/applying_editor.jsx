@@ -35,9 +35,9 @@ class ApplyingEditor {
     this.isImagesStored = false;
 
     this.applyingCountDefault = 0;
-    this.applyingCountLite = 0;
-    this.applyingCountNormal = 0;
     this.applyingCountStrict = 0;
+    this.applyingCountNormal = 0;
+    this.applyingCountLite = 0;
 
     this.sampledData = undefined;
     this.densities = undefined;
@@ -92,6 +92,45 @@ class ApplyingEditor {
   addUIEvents() {
     this.addNewTextInputEvent();
     this.addSampledDataJSONSelectEvent();
+    this.addAllTextFieldToggleEvent();
+  }
+  addAllTextFieldToggleEvent() {
+    this.addTextFieldToggleEvent('default');
+    this.addTextFieldToggleEvent('strict');
+    this.addTextFieldToggleEvent('normal');
+    this.addTextFieldToggleEvent('lite');
+  }
+  addTextFieldToggleEvent(type) {
+    if (type != 'default' && type != 'strict' &&
+        type != 'normal' && type != 'lite') {
+      console.error('Input type is not valid:', type);
+      return;
+    }
+    let toggle =
+      document.getElementsByName(`designed-text-field-toggle-${ type }`)[0];
+    toggle.addEventListener('change', (event) => {
+      let field = document.querySelector(`.designed-text-field.${ type }`);
+      (event.srcElement.checked)?
+        Util.removeClass(field, 'hidden'): Util.addClass(field, 'hidden');
+    });
+  }
+  setAllTextFieldToggleOn() {
+    let toggles = new Array();
+    toggles.push(
+      document.getElementsByName('designed-text-field-toggle-default')[0]);
+    toggles.push(
+      document.getElementsByName('designed-text-field-toggle-strict')[0]);
+    toggles.push(
+      document.getElementsByName('designed-text-field-toggle-normal')[0]);
+    toggles.push(
+      document.getElementsByName('designed-text-field-toggle-lite')[0]);
+    let event = document.createEvent('HTMLEvents');
+    event.initEvent('change', false, true);
+    toggles.forEach((element, index, array) => {
+      console.log(element);
+      element.checked = true;
+      element.dispatchEvent(event);
+    });
   }
   addFontSelectEvent() {
     let selector = document.getElementsByClassName('font-selector-items')[0];
@@ -162,7 +201,6 @@ class ApplyingEditor {
     document.head.appendChild(style);
     let fields =
       document.getElementsByClassName('designed-text-field-chars');
-
     let interval = setInterval(() => {
       if (fields != undefined) {
         clearInterval(interval);
@@ -222,6 +260,7 @@ class ApplyingEditor {
   addNewTextInputEvent() {
     let textarea = document.getElementsByName('new-text-input')[0];
     textarea.addEventListener('change', (event) => {
+      this.setAllTextFieldToggleOn();
       let text = event.srcElement.value;
       this.isTextSet = false;
       this.isTextSetting = true;
@@ -292,7 +331,6 @@ class ApplyingEditor {
     });
     // To wait for the end of applying
     let interval = setInterval(() => {
-      console.log(this.applyingCountDefault, this.applyingCountStrict, this.applyingCountNormal, this.applyingCountLite);
       if (this.applyingCountDefault == defaultChars.length-1 &&
           this.applyingCountStrict == strictChars.length-1 &&
           this.applyingCountNormal == normalChars.length-1 &&

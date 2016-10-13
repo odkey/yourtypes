@@ -54,6 +54,13 @@ class AppManager {
             }
           },
           {
+            label: 'Inspector',
+            accelerator: 'CmdOrCtrl+Alt+I',
+            click(item, focusedWindow) {
+              focusedWindow.webContents.openDevTools();
+            }
+          },
+          {
             label: 'Quit',
             accelerator: 'CmdOrCtrl+Q',
             click(item, focusedWindow) {
