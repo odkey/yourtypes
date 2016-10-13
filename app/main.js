@@ -80,7 +80,7 @@ class AppManager {
         }
       ]
     });
-    this.menu.insert(1, additional);
+    // this.menu.insert(1, additional);
     Menu.setApplicationMenu(this.menu);
     console.log('Applications menu has been updated');
   }

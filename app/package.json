@@ -1,5 +1,51 @@
 {
-  "name": "YourTypes",
+  "name": "yourtypes",
   "version": "1.0.0",
-  "main": "main.js"
+  "description": "",
+  "main": "main.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "electron .",
+    "build": "electron-packager . YourTypes --platform=darwin --arch=x64 --version=1.4.3 --icon=./resources/images/icon.png --overwrite"
+  },
+  "babel": {
+    "sourceMaps": "inline",
+    "presets": [
+      "react",
+      "es2015",
+      "stage-3"
+    ]
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "del": "^2.2.2",
+    "gulp": "^3.9.1",
+    "gulp-autoprefixer": "^3.1.1",
+    "gulp-babel": "^6.1.2",
+    "gulp-load-plugins": "^1.2.4",
+    "gulp-plumber": "^1.1.0",
+    "gulp-sass": "^2.3.2",
+    "jq": "^1.7.2"
+  },
+  "dependencies": {
+    "electron": "^1.4.3",
+    "electron-prebuilt": "^1.4.3",
+    "electron-rebuild": "^1.2.1",
+    "babel": "^6.5.2",
+    "babel-polyfill": "^6.13.0",
+    "babel-preset-es2015": "^6.14.0",
+    "babel-preset-react": "^6.11.1",
+    "babel-preset-stage-0": "^6.5.0",
+    "babel-preset-stage-3": "^6.11.0",
+    "babel-runtime": "^6.11.6",
+    "babel-register": "^6.14.0",
+    "font-manager": "^0.2.2",
+    "fs": "0.0.2",
+    "jszip": "^3.1.2",
+    "react": "^15.3.1",
+    "react-dom": "^15.3.1",
+    "request": "^2.74.0"
+  }
 }
