@@ -42,46 +42,62 @@ class AppManager {
   }
   addApplicationMenu() {
     let _this = this;
-    this.menu = Menu.getApplicationMenu();
-    if (this.menu == false) {
-      console.log('Application menu is not ready');
-      return;
-    }
-    const additional = new MenuItem({
-      label: 'Applications',
-      submenu: [
-        {
-          label: 'New App',
-          accelerator: 'CmdOrCtrl+N',
-          click(item, focusedWindow) {
-            _this.runMainApplicationWindow();
+    const newMenu = Menu.buildFromTemplate([
+      {
+        label: 'YourTypes',
+        submenu: [
+          {
+            label: 'Reload',
+            accelerator: 'CmdOrCtrl+R',
+            click(item, focusedWindow) {
+              focusedWindow.reload();
+            }
+          },
+          {
+            label: 'Quit',
+            accelerator: 'CmdOrCtrl+Q',
+            click(item, focusedWindow) {
+              app.quit();
+            }
           }
-        },
-        {
-          label: 'Applying Editor',
-          accelerator: 'CmdOrCtrl+Alt+A',
-          click(item, focusedWindow) {
-            _this.runApplyingEditorWindow();
+        ]
+      },
+      {
+        label: 'Applications',
+        submenu: [
+          {
+            label: 'New App',
+            accelerator: 'CmdOrCtrl+N',
+            click(item, focusedWindow) {
+              _this.runMainApplicationWindow();
+            }
+          },
+          {
+            label: 'Applying Editor',
+            accelerator: 'CmdOrCtrl+Alt+A',
+            click(item, focusedWindow) {
+              _this.runApplyingEditorWindow();
+            }
+          },
+          {
+            label: 'Kerning Training',
+            accelerator: 'CmdOrCtrl+Alt+T',
+            click(item, focusedWindow) {
+              _this.runKerningTrainingWindow();
+            }
+          },
+          {
+            label: 'Database Creator',
+            accelerator: 'CmdOrCtrl+Alt+D',
+            click(item, focusedWindow) {
+              _this.runDatabaseCreatorWindow();
+            }
           }
-        },
-        {
-          label: 'Kerning Training',
-          accelerator: 'CmdOrCtrl+Alt+T',
-          click(item, focusedWindow) {
-            _this.runKerningTrainingWindow();
-          }
-        },
-        {
-          label: 'Database Creator',
-          accelerator: 'CmdOrCtrl+Alt+D',
-          click(item, focusedWindow) {
-            _this.runDatabaseCreatorWindow();
-          }
-        }
-      ]
-    });
+        ]
+      }
+    ]);
     // this.menu.insert(1, additional);
-    Menu.setApplicationMenu(this.menu);
+    Menu.setApplicationMenu(newMenu);
     console.log('Applications menu has been updated');
   }
 }
@@ -97,6 +113,7 @@ app.on('window-all-closed', () => {
   }
 });
 app.on('ready', () => {
+  app.setName('YourTypes');
   appManager.addApplicationMenu();
   // appManager.runMainApplicationWindow();
   appManager.runApplyingEditorWindow();

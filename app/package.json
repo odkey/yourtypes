@@ -6,7 +6,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "electron .",
-    "build": "electron-packager . YourTypes --platform=darwin --arch=x64 --version=1.4.3 --icon=./resources/images/icon.png --overwrite"
+    "build": "electron-packager . YourTypes --platform=darwin --arch=x64 --version=1.4.3 --icon=./resources/icon/icon.icns --overwrite"
   },
   "babel": {
     "sourceMaps": "inline",
@@ -20,14 +20,6 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "del": "^2.2.2",
-    "gulp": "^3.9.1",
-    "gulp-autoprefixer": "^3.1.1",
-    "gulp-babel": "^6.1.2",
-    "gulp-load-plugins": "^1.2.4",
-    "gulp-plumber": "^1.1.0",
-    "gulp-sass": "^2.3.2",
-    "jq": "^1.7.2"
   },
   "dependencies": {
     "electron": "^1.4.3",
