@@ -25,6 +25,11 @@
 ---
 
 ## Tips
+### Libraries
+- YourTypes uses some libraries
+  - [html2canvas](https://github.com/niklasvh/html2canvas)
+  - [FileSaver.js](https://github.com/eligrey/FileSaver.js)
+
 ### if you wanna fix "Module version mismatch. Expected x, got y" error
 
 - ```$ sh electron-abi-fix.sh **Expected Num.** **electron version**```
