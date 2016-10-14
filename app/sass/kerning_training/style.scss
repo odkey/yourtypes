@@ -7,3 +7,17 @@
 div {
 
 }
+section.kerning-training {
+  display: block;
+  margin: 80px auto 80px auto;
+  text-align: center;
+  div {
+    display: inline-block;
+    margin-left: 20px;
+    margin-right: 20px;
+    &.kerning-training-field {
+      display: block;
+      margin-bottom: 80px;
+    }
+  }
+}

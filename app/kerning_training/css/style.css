@@ -17,3 +17,15 @@ body {
 
 .hidden {
   display: none; }
+
+section.kerning-training {
+  display: block;
+  margin: 80px auto 80px auto;
+  text-align: center; }
+  section.kerning-training div {
+    display: inline-block;
+    margin-left: 20px;
+    margin-right: 20px; }
+    section.kerning-training div.kerning-training-field {
+      display: block;
+      margin-bottom: 80px; }

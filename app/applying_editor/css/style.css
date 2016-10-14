@@ -18,5 +18,17 @@ body {
 .hidden {
   display: none; }
 
-div.designed-text-field div.designed-text-field-chars span {
-  font-size: inherit; }
+section.designed-text {
+  margin: 80px auto 80px 40px;
+  display: block;
+  text-align: left; }
+  section.designed-text div.designed-text.default {
+    min-height: 100px; }
+  section.designed-text div.designed-text.strict {
+    min-height: 100px; }
+  section.designed-text div.designed-text.normal {
+    min-height: 100px; }
+  section.designed-text div.designed-text.lite {
+    min-height: 100px; }
+  section.designed-text div.designed-text-field div.designed-text-field-chars span {
+    font-size: inherit; }
