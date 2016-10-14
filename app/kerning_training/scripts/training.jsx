@@ -49,7 +49,7 @@ class Training {
     this.zip = new JSZip();
     // Sample words
     // lorem_ipsum, kumo_no_ito, vuitton, muji
-    this.defaultTextTitle = "lorem_ipsum";
+    this.defaultTextTitle = "kusamakura";
     this.sampleWords = {
       words: require(`../../data/sample_text/${ this.defaultTextTitle }/data.json`)["words"],
       index: 0

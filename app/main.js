@@ -27,6 +27,10 @@ class AppManager {
       `file://${ __dirname }/kerning_training/index.html`);
     this.databaseCreatorWindow = new DatabaseCreatorWindow(
       `file://${ __dirname }/database_creator/index.html`);
+    this.applyingEditorWindow.setWindowSize(1200, 800);
+    this.applyingEditorWindow.setPosition(0,0);
+    this.kerningTrainingWindow.setWindowSize(1200, 600);
+    this.kerningTrainingWindow.setPosition(0, 800);
   }
   runMainApplicationWindow() {
     this.mainApplicationWindow.run();
@@ -103,7 +107,6 @@ class AppManager {
         ]
       }
     ]);
-    // this.menu.insert(1, additional);
     Menu.setApplicationMenu(newMenu);
     console.log('Applications menu has been updated');
   }
@@ -124,6 +127,6 @@ app.on('ready', () => {
   appManager.addApplicationMenu();
   // appManager.runMainApplicationWindow();
   appManager.runApplyingEditorWindow();
-  // appManager.runKerningTrainingWindow();
+  appManager.runKerningTrainingWindow();
   // appManager.runDatabaseCreatorWindow();
 });
