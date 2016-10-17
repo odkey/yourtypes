@@ -596,7 +596,7 @@ class Training {
 
     let blob =
       new Blob([JSON.stringify(this.result)], { type: 'application/json' });
-      saveAs(blob, filename);
+    saveAs(blob, filename);
   }
   saveCharsAsImages() {
     const folder =

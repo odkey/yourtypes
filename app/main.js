@@ -105,6 +105,17 @@ class AppManager {
             }
           }
         ]
+      },
+      {
+        label: 'Operations',
+        submenu: [
+          {
+            label: 'Export Result CSV',
+            click(item, focusedWindow) {
+              _this.applyingEditorWindow.sendExportCSVMessage();
+            }
+          }
+        ]
       }
     ]);
     Menu.setApplicationMenu(newMenu);

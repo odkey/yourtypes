@@ -14,7 +14,7 @@ import FontSelectorView from '../../common/scripts/font_selector_view.jsx';
 
 import Util from '../../common/scripts/util.jsx';
 
-const { remote } = require('electron');
+const { remote, ipcRenderer } = require('electron');
 const dialog = remote.dialog;
 
 class ApplyingEditor {
@@ -50,6 +50,7 @@ class ApplyingEditor {
       this.isFontSet = false;
       this.applyFont();
     });
+    this.addIPCEvents();
     this.addUIEvents();
     // To disable drag & drop event
     document.addEventListener('dragover', (event) => {
@@ -78,6 +79,42 @@ class ApplyingEditor {
         this.disableNewTextInput();
       }
     }, 100);
+  }
+  addIPCEvents() {
+    this.listenExportCSVMessage();
+  }
+  listenExportCSVMessage() {
+    ipcRenderer.on('export.csv.message', (event, arg) => {
+      if (this.isDataApplied) {
+        const sChars =
+          document.getElementsByClassName('designed-text-field-chars strict');
+        const nChars =
+          document.getElementsByClassName('designed-text-field-chars normal');
+        const lChars =
+          document.getElementsByClassName('designed-text-field-chars lite');
+        let csvData = '';
+        for (let i = 0; i < sChars.length-1; i++) {
+          csvData += sChars[i].style.letterSpacing.split('em');
+          csvData += '\t';
+        }
+        for (let i = 1; i < nChars.length-1; i++) {
+          csvData += nChars[i].style.letterSpacing.split('em');
+          csvData += '\t';
+        }
+        for (let i = 1; i < lChars.length-1; i++) {
+          csvData += lChars[i].style.letterSpacing.split('em');
+          csvData += '\t';
+        }
+        console.dir(csvData);
+        let blob
+          = new Blob([csvData], { type: 'text/plain;charset=utf-16' });
+        saveAs(blob, 'result.csv');
+      }
+      else {
+        console.warn('No data is applied to the text');
+
+      }
+    });
   }
   disableNewTextInput() {
     let textarea = document.getElementsByName('new-text-input')[0];
@@ -680,6 +717,9 @@ class ApplyingEditor {
         });
         let interval = setInterval(() => {
           if (runningCount == json.values.length) {
+            document.getElementsByClassName(
+              'sampled-data-json-name-value')[0].textContent =
+                file[0].split('/')[file[0].split('/').length-1];
             this.isSampledDataLoaded = true;
             this.isSampledDataLoading = false;
             console.log('JSON loaded', this.sampledData);

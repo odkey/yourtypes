@@ -5,6 +5,7 @@
     <title>YourTypes Applying Editor</title>
     <link rel="stylesheet" href="./css/style.css" charset="utf-8">
     <script type="text/javascript" src="../lib/html2canvas/html2canvas.min.js"></script>
+    <script type="text/javascript" src="../lib/file-saver/FileSaver.min.js"></script>
     <script type="text/javascript">
       window.onload = () => {
         require('babel-register');
@@ -21,6 +22,10 @@
     </div>
     <div class="new-text-input">
       <textarea name="new-text-input" rows="8" cols="40" placeholder="new text"></textarea>
+    </div>
+    <div class="sampled-data-json-name">
+      <span>Data&nbsp;name:&nbsp;</span>
+      <span class="sampled-data-json-name-value">None</span>
     </div>
     <div class="sampled-data-json-selector">
       <input type="button" name="sampled-data-json-selector" value="Open kerning data">
@@ -56,7 +61,7 @@
 
         </div>
       </div>
-      <div class="designed-text default">
+      <div class="designed-text lite">
         <div class="designed-text-field-toggle lite">
           <input type="checkbox" name="designed-text-field-toggle-lite" checked="true">
           <span>Strictness:&nbsp;Lite</span>

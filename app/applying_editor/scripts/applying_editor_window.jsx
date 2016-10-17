@@ -9,4 +9,7 @@ export class ApplyingEditorWindow extends BaseWindow {
   constructor(pathToHTML) {
     super(pathToHTML);
   }
+  sendExportCSVMessage() {
+    this.window.webContents.send('export.csv.message', 'true');
+  }
 }
