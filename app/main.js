@@ -74,35 +74,23 @@ class AppManager {
         ]
       },
       {
-        label: 'Applications',
+        label: 'Application',
         submenu: [
           {
-            label: 'New App',
-            accelerator: 'CmdOrCtrl+N',
-            click(item, focusedWindow) {
-              _this.runMainApplicationWindow();
-            }
+            label: 'New App', accelerator: 'CmdOrCtrl+N',
+            click(item, focusedWindow) { _this.runMainApplicationWindow(); }
           },
           {
-            label: 'Applying Editor',
-            accelerator: 'CmdOrCtrl+Alt+A',
-            click(item, focusedWindow) {
-              _this.runApplyingEditorWindow();
-            }
+            label: 'Applying Editor', accelerator: 'CmdOrCtrl+Alt+A',
+            click(item, focusedWindow) { _this.runApplyingEditorWindow(); }
           },
           {
-            label: 'Kerning Training',
-            accelerator: 'CmdOrCtrl+Alt+T',
-            click(item, focusedWindow) {
-              _this.runKerningTrainingWindow();
-            }
+            label: 'Kerning Training', accelerator: 'CmdOrCtrl+Alt+T',
+            click(item, focusedWindow) { _this.runKerningTrainingWindow(); }
           },
           {
-            label: 'Database Creator',
-            accelerator: 'CmdOrCtrl+Alt+D',
-            click(item, focusedWindow) {
-              _this.runDatabaseCreatorWindow();
-            }
+            label: 'Database Creator', accelerator: 'CmdOrCtrl+Alt+D',
+            click(item, focusedWindow) { _this.runDatabaseCreatorWindow(); }
           }
         ]
       },
@@ -110,11 +98,25 @@ class AppManager {
         label: 'Operations',
         submenu: [
           {
-            label: 'Export Result CSV',
+            label: 'Export Result CSV', accelerator: 'CmdOrCtrl+E',
             click(item, focusedWindow) {
               _this.applyingEditorWindow.sendExportCSVMessage();
             }
           }
+        ]
+      },
+      {
+        label: "Edit",
+        submenu: [
+            { label: "Undo", accelerator: "CmdOrCtrl+Z", selector: "undo:" },
+            { label: "Redo", accelerator: "Shift+CmdOrCtrl+Z",
+              selector: "redo:" },
+            { type: "separator" },
+            { label: "Cut", accelerator: "CmdOrCtrl+X", selector: "cut:" },
+            { label: "Copy", accelerator: "CmdOrCtrl+C", selector: "copy:" },
+            { label: "Paste", accelerator: "CmdOrCtrl+V", selector: "paste:" },
+            { label: "Select All", accelerator: "CmdOrCtrl+A",
+              selector: "selectAll:" }
         ]
       }
     ]);

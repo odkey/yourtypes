@@ -34,6 +34,7 @@ class ApplyingEditor {
     this.isImagesStoring = false;
     this.isImagesStored = false;
 
+    this.analyseMode = 'default';
     this.applyingCountDefault = 0;
     this.applyingCountStrict = 0;
     this.applyingCountNormal = 0;
@@ -95,15 +96,30 @@ class ApplyingEditor {
         let csvData = '';
         for (let i = 0; i < sChars.length-1; i++) {
           csvData += sChars[i].style.letterSpacing.split('em');
-          csvData += '\t';
+          if (i == sChars.length-2) {
+            csvData += '\n';
+          }
+          else {
+            csvData += '\t';
+          }
         }
         for (let i = 1; i < nChars.length-1; i++) {
           csvData += nChars[i].style.letterSpacing.split('em');
-          csvData += '\t';
+          if (i == sChars.length-2) {
+            csvData += '\n';
+          }
+          else {
+            csvData += '\t';
+          }
         }
         for (let i = 1; i < lChars.length-1; i++) {
           csvData += lChars[i].style.letterSpacing.split('em');
-          csvData += '\t';
+          if (i == sChars.length-2) {
+            csvData += '\n';
+          }
+          else {
+            csvData += '\t';
+          }
         }
         console.dir(csvData);
         let blob
@@ -130,6 +146,13 @@ class ApplyingEditor {
     this.addNewTextInputEvent();
     this.addSampledDataJSONSelectEvent();
     this.addAllTextFieldToggleEvent();
+    this.addAnalyseModeSelectorEvent();
+  }
+  addAnalyseModeSelectorEvent() {
+    let selector = document.getElementsByName('analyse-mode-selector-items')[0];
+    selector.addEventListener('change', (event) => {
+      this.analyseMode = selector.options[selector.selectedIndex].value;
+    });
   }
   addAllTextFieldToggleEvent() {
     this.addTextFieldToggleEvent('default');
@@ -298,6 +321,7 @@ class ApplyingEditor {
     textarea.addEventListener('change', (event) => {
       this.setAllTextFieldToggleOn();
       let text = event.srcElement.value;
+      if (text.length < 1 || text == ' ') { return; }
       this.isTextSet = false;
       this.isTextSetting = true;
       this.isFontSet = false;
@@ -380,7 +404,7 @@ class ApplyingEditor {
   }
   applyLetterSpacesLite(element, index, array) {
     this.applyingCountLite = 0;
-    let nearest = { squaredDistance: 0, index: -1 };
+    let nearest = { squaredDistance: 1000, index: -1 };
     let firstDensity =
       parseFloat(this.densities[array[index].textContent].all);
     let secondDensity =
@@ -392,8 +416,15 @@ class ApplyingEditor {
       let diffFirst = firstDensity - sampleFirstDenstiy;
       let diffSecond = secondDensity - sampleSecondDensity;
       let squaredDistance = diffFirst * diffFirst + diffSecond * diffSecond;
-      if (searchCount == 0 || squaredDistance < nearest.squaredDistance) {
-        nearest = { index: index, squaredDistance: squaredDistance};
+      if (this.analyseMode == 'except-origin') {
+        if (squaredDistance > 0 && squaredDistance < nearest.squaredDistance) {
+          nearest = { index: index, squaredDistance: squaredDistance};
+        }
+      }
+      else {
+        if (squaredDistance < nearest.squaredDistance) {
+          nearest = { index: index, squaredDistance: squaredDistance };
+        }
       }
       searchCount++;
     });
@@ -408,7 +439,7 @@ class ApplyingEditor {
   }
   applyLetterSpacesNormal(element, index, array) {
     this.applyingCountNormal = 0;
-    let nearest = { squaredDistance: 0, index: -1 };
+    let nearest = { squaredDistance: 1000, index: -1 };
     let firstDensity =
       parseFloat(this.densities[array[index].textContent].right);
     let secondDensity =
@@ -420,8 +451,15 @@ class ApplyingEditor {
       let diffFirst = firstDensity - sampleFirstDenstiy;
       let diffSecond = secondDensity - sampleSecondDensity;
       let squaredDistance = diffFirst * diffFirst + diffSecond * diffSecond;
-      if (searchCount == 0 || squaredDistance < nearest.squaredDistance) {
-        nearest = { index: index, squaredDistance: squaredDistance };
+      if (this.analyseMode == 'except-origin') {
+        if (squaredDistance > 0 && squaredDistance < nearest.squaredDistance) {
+          nearest = { index: index, squaredDistance: squaredDistance};
+        }
+      }
+      else {
+        if (squaredDistance < nearest.squaredDistance) {
+          nearest = { index: index, squaredDistance: squaredDistance };
+        }
       }
       searchCount++;
     });
@@ -436,7 +474,7 @@ class ApplyingEditor {
   }
   applyLetterSpacesStrict(element, index, array) {
     this.applyingCountStrict = 0;
-    let nearest = { squaredDistance: 0, index: -1 };
+    let nearest = { squaredDistance: 1000, index: -1 };
     let firstTopDensity =
       parseFloat(this.densities[array[index].textContent].right_top);
     let firstBottomDensity =
@@ -461,9 +499,16 @@ class ApplyingEditor {
       let diff4 = secondBottomDensity - sampleSecondBottomDensity;
       let squaredDistance =
         diff1 * diff1 + diff2 * diff2 + diff3 * diff3 + diff4 * diff4;
-      if (searchCount == 0 || squaredDistance < nearest.squaredDistance) {
-        nearest = { index: index, squaredDistance: squaredDistance };
-      }
+        if (this.analyseMode == 'except-origin') {
+          if (squaredDistance > 0 && squaredDistance < nearest.squaredDistance) {
+            nearest = { index: index, squaredDistance: squaredDistance};
+          }
+        }
+        else {
+          if (squaredDistance < nearest.squaredDistance) {
+            nearest = { index: index, squaredDistance: squaredDistance };
+          }
+        }
       searchCount++;
     });
     let interval = setInterval(() => {
