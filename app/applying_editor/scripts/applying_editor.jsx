@@ -40,6 +40,7 @@ class ApplyingEditor {
     this.applyingCountNormal = 0;
     this.applyingCountLite = 0;
     this.applyingCountBottomHalf = 0;
+    this.applyingCountSideSpace = 0;
 
     this.sampledData = undefined;
     this.densities = undefined;
@@ -97,6 +98,8 @@ class ApplyingEditor {
           document.getElementsByClassName('designed-text-field-chars normal');
         const lChars =
           document.getElementsByClassName('designed-text-field-chars lite');
+        const ssChars =
+          document.getElementsByClassName('designed-text-field-chars side-space');
         let csvData = '';
         for (let i = 0; i < bhChars.length-1; i++) {
           csvData += bhChars[i].style.letterSpacing.split('em');
@@ -128,6 +131,15 @@ class ApplyingEditor {
         for (let i = 1; i < lChars.length-1; i++) {
           csvData += lChars[i].style.letterSpacing.split('em');
           if (i == lChars.length-2) {
+            csvData += '\n';
+          }
+          else {
+            // csvData += '\t';
+          }
+        }
+        for (let i = 1; i < ssChars.length-1; i++) {
+          csvData += ssChars[i].style.letterSpacing.split('em');
+          if (i == ssChars.length-2) {
             csvData += '\n';
           }
           else {
@@ -173,10 +185,11 @@ class ApplyingEditor {
     this.addTextFieldToggleEvent('normal');
     this.addTextFieldToggleEvent('lite');
     this.addTextFieldToggleEvent('bottom-half');
+    this.addTextFieldToggleEvent('side-space');
   }
   addTextFieldToggleEvent(type) {
-    if (type != 'default' && type != 'strict' &&
-        type != 'normal' && type != 'lite' && type != 'bottom-half') {
+    if (type != 'default' && type != 'strict' && type != 'normal' &&
+        type != 'lite' && type != 'bottom-half' && type != 'side-space') {
       console.error('Input type is not valid:', type);
       return;
     }
@@ -200,6 +213,8 @@ class ApplyingEditor {
       document.getElementsByName('designed-text-field-toggle-normal')[0]);
     toggles.push(
       document.getElementsByName('designed-text-field-toggle-lite')[0]);
+    toggles.push(
+      document.getElementsByName('designed-text-field-toggle-side-space')[0]);
     let event = document.createEvent('HTMLEvents');
     event.initEvent('change', false, true);
     toggles.forEach((element, index, array) => {
@@ -297,6 +312,8 @@ class ApplyingEditor {
       'designed-text-field normal')[0].innerHTML = '';
     document.getElementsByClassName(
       'designed-text-field lite')[0].innerHTML = '';
+    document.getElementsByClassName(
+      'designed-text-field side-space')[0].innerHTML = '';
     ReactDOM.render(
       <DesignedTextView text={ text } additionalClass={ 'default' }/>,
       document.getElementsByClassName('designed-text-field default')[0],
@@ -336,6 +353,15 @@ class ApplyingEditor {
     ReactDOM.render(
       <DesignedTextView text={ text } additionalClass={ 'lite' }/>,
       document.getElementsByClassName('designed-text-field lite')[0],
+      () => {
+        if (callback) { callback(); }
+        this.isTextSet = true;
+        this.isTextSetting = false;
+      }
+    );
+    ReactDOM.render(
+      <DesignedTextView text={ text } additionalClass={ 'side-space' }/>,
+      document.getElementsByClassName('designed-text-field side-space')[0],
       () => {
         if (callback) { callback(); }
         this.isTextSet = true;
@@ -392,6 +418,7 @@ class ApplyingEditor {
     this.applyingCountStrict = 0;
     this.applyingCountNormal = 0;
     this.applyingCountLite = 0;
+    this.applyingCountSideSpace = 0;
     let defaultChars = document.getElementsByClassName(
       'designed-text-field-chars default')[0].childNodes;
     let bottomHalfChars = document.getElementsByClassName(
@@ -402,6 +429,8 @@ class ApplyingEditor {
       'designed-text-field-chars normal')[0].childNodes;
     let liteChars = document.getElementsByClassName(
       'designed-text-field-chars lite')[0].childNodes;
+    let sideSpaceChars = document.getElementsByClassName(
+      'designed-text-field-chars side-space')[0].childNodes;
     defaultChars.forEach((element, index, array) => {
       if (index == array.length - 1) { return; }
       element.style.letterSpacing = '0em';
@@ -423,13 +452,18 @@ class ApplyingEditor {
       if (index == array.length - 1) { return; }
       this.applyLetterSpacesBottomHalf(element, index, array);
     });
+    sideSpaceChars.forEach((element, index, array) => {
+      if (index == array.length - 1) { return; }
+      this.applyLetterSpacesSideSpace(element, index, array);
+    });
     // To wait for the end of applying
     let interval = setInterval(() => {
       if (this.applyingCountDefault == defaultChars.length-1 &&
           this.applyingCountBottomHalf == bottomHalfChars.length-1 &&
           this.applyingCountStrict == strictChars.length-1 &&
           this.applyingCountNormal == normalChars.length-1 &&
-          this.applyingCountLite == liteChars.length-1) {
+          this.applyingCountLite == liteChars.length-1 &&
+          this.applyingCountSideSpace == sideSpaceChars.length-1) {
         clearInterval(interval);
         this.isDataApplied = true;
         this.isDataApplying = false;
@@ -437,6 +471,10 @@ class ApplyingEditor {
       }
     }, 100);
   }
+  applyLetterSpacesSideSpace(element, index, array) {
+    // Implement!!!!!
+  }
+
   applyLetterSpacesLite(element, index, array) {
     this.applyingCountLite = 0;
     let nearest = { squaredDistance: 1000, index: -1 };
