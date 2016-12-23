@@ -118,7 +118,7 @@ class ApplyingEditor {
         }
         for (let i = 1; i < nChars.length-1; i++) {
           csvData += nChars[i].style.letterSpacing.split('em');
-          if (i == sChars.length-2) {
+          if (i == nChars.length-2) {
             csvData += '\n';
           }
           else {
@@ -127,7 +127,7 @@ class ApplyingEditor {
         }
         for (let i = 1; i < lChars.length-1; i++) {
           csvData += lChars[i].style.letterSpacing.split('em');
-          if (i == sChars.length-2) {
+          if (i == lChars.length-2) {
             csvData += '\n';
           }
           else {
