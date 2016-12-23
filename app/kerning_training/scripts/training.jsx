@@ -336,6 +336,8 @@ class Training {
         let sumBlackLeftBottom = 0;
         let sumBlackRightTop = 0;
         let sumBlackRightBottom = 0;
+        let sumWhiteLeftSpace = 0;
+        let sumWhiteRightSpace = 0;
         let sum_up = (element, index, kind) => {
           return () => {
             return new Promise((resolve, reject) => {
@@ -360,23 +362,43 @@ class Training {
               else if (kind == 'right-bottom') {
                 sumBlackRightBottom += element/255.0;
               }
+              else if (kind == 'left-space') {
+                sumWhiteLeftSpace += 1
+              }
+              else if (kind == 'right-space') {
+                sumWhiteRightSpace += 1
+              }
               else { console.error();('Illegal kind arg is set'); }
               resolve();
             });
           }
         }
         let promises = new Array();
+        let leftSpaceValidation = new Array(height)
+        let rightSpaceValidation = new Array(height)
+        for (var i = 0; i < height; i++) {
+          leftSpaceValidation[i] = true
+          rightSpaceValidation[i] = true
+        }
         pixels.forEach((element, index) => {
           if (index%4 != 3) { return; }
           const i = parseFloat(parseInt(index/4));
-          const x = i%parseFloat(width);
-          const y = i/parseFloat(width);
+          const x = parseInt(i%parseFloat(width));
+          const y = parseInt(i/parseFloat(width));
           if (x < width/2) {
             if (y < height/2) {
               promises.push(sum_up(element, index, 'left-top'));
             }
             else {
               promises.push(sum_up(element, index, 'left-bottom'));
+            }
+            if (leftSpaceValidation[y]) {
+              if (element == 0) {
+                promises.push(sum_up(element, index, 'left-space'));
+              }
+              else if (element != 0){
+                leftSpaceValidation[y] = false;
+              }
             }
           }
           else if (x >= width/2) {
@@ -385,6 +407,14 @@ class Training {
             }
             else {
               promises.push(sum_up(element, index, 'right-bottom'));
+            }
+            if (rightSpaceValidation[y]) {
+              if (element == 0) {
+                promises.push(sum_up(element, index, 'right-space'));
+              }
+              else {
+                rightSpaceValidation[y] = false;
+              }
             }
           }
         });
@@ -397,6 +427,8 @@ class Training {
           const leftDensity = (leftTopDensity + leftBottomDensity) / 2.0;
           const rightDensity = (rightTopDensity + rightBottomDensity) / 2.0;
           const density = (leftDensity + rightDensity) / 2.0;
+          const leftSpace = sumWhiteLeftSpace;
+          const rightSpace = sumWhiteRightSpace;
           this.densities[letter] = new Object();
           this.densities[letter]['left_top'] = leftTopDensity;
           this.densities[letter]['left_bottom'] = leftBottomDensity;
@@ -405,6 +437,8 @@ class Training {
           this.densities[letter]['left'] = leftDensity;
           this.densities[letter]['right'] = rightDensity;
           this.densities[letter]['all'] = density;
+          this.densities[letter]['left_space'] = sumWhiteLeftSpace;
+          this.densities[letter]['right_space'] = sumWhiteRightSpace
           this.runningCount++;
           if (this.runningCount == this.images.length) {
             this.isDataAnalysed = true;
@@ -439,7 +473,9 @@ class Training {
             left_top: densityList1.left_top,
             left_bottom: densityList1.left_bottom,
             right_top: densityList1.right_top,
-            right_bottom: densityList1.right_bottom
+            right_bottom: densityList1.right_bottom,
+            left_space: densityList1.left_space,
+            right_space: densityList1.right_space
           };
           const letter2 = element['second_char'];
           const densityList2 = this.densities[letter2];
@@ -453,7 +489,9 @@ class Training {
             left_top: densityList2.left_top,
             left_bottom: densityList2.left_bottom,
             right_top: densityList2.right_top,
-            right_bottom: densityList2.right_bottom
+            right_bottom: densityList2.right_bottom,
+            left_space: densityList2.left_space,
+            right_space: densityList2.right_space
           }
           element['letter_space'] = new Object();
           element['letter_space']['px'] = element['kerning_value'];
