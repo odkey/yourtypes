@@ -89,17 +89,21 @@ class ApplyingEditor {
   listenExportCSVMessage() {
     ipcRenderer.on('export.csv.message', (event, arg) => {
       if (this.isDataApplied) {
-
         const bhChars =
-          document.getElementsByClassName('designed-text-field-chars bottom-half');
+          document.getElementsByClassName(
+            'designed-text-field-chars bottom-half');
         const sChars =
-          document.getElementsByClassName('designed-text-field-chars strict');
+          document.getElementsByClassName(
+            'designed-text-field-chars strict');
         const nChars =
-          document.getElementsByClassName('designed-text-field-chars normal');
+          document.getElementsByClassName(
+            'designed-text-field-chars normal');
         const lChars =
-          document.getElementsByClassName('designed-text-field-chars lite');
+          document.getElementsByClassName(
+            'designed-text-field-chars lite');
         const ssChars =
-          document.getElementsByClassName('designed-text-field-chars side-space');
+          document.getElementsByClassName(
+            'designed-text-field-chars side-space');
         let csvData = '';
         for (let i = 0; i < bhChars.length-1; i++) {
           csvData += bhChars[i].style.letterSpacing.split('em');
@@ -454,6 +458,7 @@ class ApplyingEditor {
     });
     sideSpaceChars.forEach((element, index, array) => {
       if (index == array.length - 1) { return; }
+      // console.log(this.applyLetterSpacesSideSpace);
       this.applyLetterSpacesSideSpace(element, index, array);
     });
     // To wait for the end of applying
@@ -471,10 +476,6 @@ class ApplyingEditor {
       }
     }, 100);
   }
-  applyLetterSpacesSideSpace(element, index, array) {
-    // Implement!!!!!
-  }
-
   applyLetterSpacesLite(element, index, array) {
     this.applyingCountLite = 0;
     let nearest = { squaredDistance: 1000, index: -1 };
@@ -491,7 +492,7 @@ class ApplyingEditor {
       let squaredDistance = diffFirst * diffFirst + diffSecond * diffSecond;
       if (this.analyseMode == 'except-origin') {
         if (squaredDistance > 0 && squaredDistance < nearest.squaredDistance) {
-          nearest = { index: index, squaredDistance: squaredDistance};
+          nearest = { index: index, squaredDistance: squaredDistance };
         }
       }
       else {
@@ -503,6 +504,7 @@ class ApplyingEditor {
     });
     let interval = setInterval(() => {
       if (searchCount == this.sampledData.length) {
+        console.log('Applied: Lite');
         clearInterval(interval);
         element.style.letterSpacing =
           `${ this.sampledData[nearest.index].letter_space.em }em`;
@@ -526,7 +528,7 @@ class ApplyingEditor {
       let squaredDistance = diffFirst * diffFirst + diffSecond * diffSecond;
       if (this.analyseMode == 'except-origin') {
         if (squaredDistance > 0 && squaredDistance < nearest.squaredDistance) {
-          nearest = { index: index, squaredDistance: squaredDistance};
+          nearest = { index: index, squaredDistance: squaredDistance };
         }
       }
       else {
@@ -538,6 +540,7 @@ class ApplyingEditor {
     });
     let interval = setInterval(() => {
       if (searchCount == this.sampledData.length) {
+        console.log('Applied: Normal');
         clearInterval(interval);
         element.style.letterSpacing =
           `${ this.sampledData[nearest.index].letter_space.em }em`;
@@ -586,6 +589,7 @@ class ApplyingEditor {
     });
     let interval = setInterval(() => {
       if (searchCount == this.sampledData.length) {
+        console.log('Applied: Strict');
         clearInterval(interval);
         element.style.letterSpacing =
           `${ this.sampledData[nearest.index].letter_space.em }em`;
@@ -615,7 +619,7 @@ class ApplyingEditor {
       let squaredDistance = diffFirst * diffFirst + diffSecond * diffSecond;
       if (this.analyseMode == 'except-origin') {
         if (squaredDistance > 0 && squaredDistance < nearest.squaredDistance) {
-          nearest = { index: index, squaredDistance: squaredDistance};
+          nearest = { index: index, squaredDistance: squaredDistance };
         }
       }
       else {
@@ -627,10 +631,50 @@ class ApplyingEditor {
     });
     let interval = setInterval(() => {
       if (searchCount == this.sampledData.length) {
+        console.log('Applied: Bottom half');
         clearInterval(interval);
         element.style.letterSpacing =
           `${ this.sampledData[nearest.index].letter_space.em }em`;
         this.applyingCountBottomHalf++;
+      }
+    }, 100);
+  }
+  applyLetterSpacesSideSpace(element, index, array) {
+    this.applyingLetterSpacesSideSpace = 0;
+    let nearest = { squaredDistance: 100000, index: -1 };
+    let firstSideSpace =
+      parseFloat(this.densities[array[index].textContent].right_space);
+    let secondSideSpace =
+      parseFloat(this.densities[array[index].textContent].left_space);
+      let searchCount = 0;
+    this.sampledData.forEach((element, index, array) => {
+      let sampleFirstSideSpace =
+        parseFloat(element.first_char.densities.right_space);
+      let sampleSecondSideSpace =
+        parseFloat(element.second_char.densities.left_space);
+      let diffFirst = firstSideSpace - sampleFirstSideSpace;
+      let diffSecond = sampleSecondSideSpace - sampleSecondSideSpace;
+      let squaredDistance = diffFirst * diffFirst + diffSecond * diffSecond;
+      if (this.analyseMode == 'except-origin') {
+        if (squaredDistance > 0 && squaredDistance < nearest.squaredDistance) {
+          nearest = { index: index, squaredDistance: squaredDistance };
+        }
+      }
+      else {
+        if (squaredDistance < nearest.squaredDistance) {
+          nearest = { index: index, squaredDistance: squaredDistance };
+        }
+      }
+      searchCount++;
+    });
+    let interval = setInterval(() => {
+      if (searchCount == this.sampledData.length) {
+        console.log('Applied: Side space');
+        clearInterval(interval);
+        console.log(nearest.index, this.sampledData[nearest.index]);
+        element.style.letterSpacing =
+          `${ this.sampledData[nearest.index].letter_space.em }em`;
+        this.applyingCountSideSpace++;
       }
     }, 100);
   }
@@ -666,6 +710,8 @@ class ApplyingEditor {
         let sumBlackLeftBottom = 0;
         let sumBlackRightTop = 0;
         let sumBlackRightBottom = 0;
+        let sumWhiteLeftSpace = 0;
+        let sumWhiteRightSpace = 0;
         let sum_up = (element, index, kind) => {
           return () => {
             return new Promise((resolve, reject) => {
@@ -690,24 +736,44 @@ class ApplyingEditor {
               else if (kind == 'right-bottom') {
                 sumBlackRightBottom += element/255.0;
               }
-              else { console.error();('Illegal kind arg is set'); }
+              else if (kind == 'left-space') {
+                sumWhiteLeftSpace += 1
+              }
+              else if (kind == 'right-space') {
+                sumWhiteRightSpace += 1
+              }
+              else { console.error('Illegal kind arg is set'); }
               resolve();
             });
           }
         }
         let density = 0;
         let promises = new Array();
+        let leftSpaceValidation = new Array(height);
+        let rightSpaceValidation = new Array(height);
+        for (var i = 0; i < height; i++) {
+          leftSpaceValidation[i] = true;
+          rightSpaceValidation[i] = true;
+        }
         pixels.forEach((element, index) => {
           if (index%4 != 3) { return; }
           const i = parseFloat(parseInt(index/4));
-          const x = i%parseFloat(width);
-          const y = i/parseFloat(width);
+          const x = parseInt(i%parseFloat(width));
+          const y = parseInt(i/parseFloat(width));
           if (x < width/2) {
             if (y < height/2) {
               promises.push(sum_up(element, index, 'left-top'));
             }
             else {
               promises.push(sum_up(element, index, 'left-bottom'));
+            }
+            if (leftSpaceValidation[y]) {
+              if (element == 0) {
+                promises.push(sum_up(element, index, 'left-space'));
+              }
+              else if (element != 0) {
+                leftSpaceValidation[y] = false;
+              }
             }
           }
           else if (x >= width/2) {
@@ -716,6 +782,14 @@ class ApplyingEditor {
             }
             else {
               promises.push(sum_up(element, index, 'right-bottom'));
+            }
+            if (rightSpaceValidation[y]) {
+              if (element == 0) {
+                promises.push(sum_up(element, index, 'right-space'));
+              }
+              else {
+                rightSpaceValidation[y] = false;
+              }
             }
           }
         });
@@ -728,6 +802,8 @@ class ApplyingEditor {
           const leftDensity = (leftTopDensity + leftBottomDensity) / 2.0;
           const rightDensity = (rightTopDensity + rightBottomDensity) / 2.0;
           const density = (leftDensity + rightDensity) / 2.0;
+          const leftSpace = sumWhiteLeftSpace;
+          const rightSpace = sumWhiteRightSpace;
           this.densities[letter] = new Object();
           this.densities[letter]['left_top'] = leftTopDensity;
           this.densities[letter]['left_bottom'] = leftBottomDensity;
@@ -736,6 +812,8 @@ class ApplyingEditor {
           this.densities[letter]['left'] = leftDensity;
           this.densities[letter]['right'] = rightDensity;
           this.densities[letter]['all'] = density;
+          this.densities[letter]['left_space'] = leftSpace;
+          this.densities[letter]['right_space'] = rightSpace;
           analysingCount++;
           if (analysingCount == this.images.length) {
             this.isTextAnalysed = true;
@@ -851,6 +929,8 @@ class ApplyingEditor {
                 right: element.first_char.densities.right,
                 right_bottom: element.first_char.densities.right_bottom,
                 right_top: element.first_char.densities.right_top,
+                left_space: element.first_char.densities.left_space,
+                right_space: element.first_char.densities.right_space
               },
               letter: element.first_char.letter
             },
@@ -863,6 +943,8 @@ class ApplyingEditor {
                 right: element.second_char.densities.right,
                 right_bottom: element.second_char.densities.right_bottom,
                 right_top: element.second_char.densities.right_top,
+                left_space: element.second_char.densities.left_space,
+                right_space: element.second_char.densities.right_space
               },
               letter: element.second_char.letter
             },
