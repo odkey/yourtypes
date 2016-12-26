@@ -8,18 +8,23 @@ $(document).ready(() => {
 });
 
 function addSideSpaceDataTo(inputJson) {
-  let jsonObject = inputJson;
-  console.log(jsonObject);
-  jsonObject.values.forEach((e, i) => {
-    e.first_char.densities.left_space = 300;
-    e.first_char.densities.right_space = 200;
-    e.second_char.densities.left_space = 100;
-    e.second_char.densities.right_space = 100;
+  $.getJSON('letter_densities.json', (densities) => {
+    let jsonObject = inputJson;
+    jsonObject.values.forEach((e, i) => {
+      console.log(densities, e.first_char.letter);
+      e.first_char.densities.left_space =
+        densities[e.first_char.letter].left_space;
+      e.first_char.densities.right_space =
+        densities[e.first_char.letter].right_space;
+      e.second_char.densities.left_space =
+        densities[e.second_char.letter].left_space;
+      e.second_char.densities.right_space =
+        densities[e.second_char.letter].right_space;
+    });
+    setTimeout(() => {
+      let output = $('#output-text');
+      let jsonString = JSON.stringify(jsonObject);
+      output.val(jsonString);
+    }, 1000);
   });
-  setTimeout(() => {
-    let output = $('#output-text');
-    let jsonString = JSON.stringify(jsonObject);
-    console.log(jsonString);
-    output.val(jsonString);
-  }, 1000);
 }
