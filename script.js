@@ -8,11 +8,9 @@ $(document).ready(() => {
 });
 
 function addSideSpaceDataTo(inputJson) {
-  $.getJSON('letter_densities.json', (densities) => {
+  $.getJSON('yourtypes-densities-HiraginoSans-W3.json', (densities) => {
     let jsonObject = inputJson;
     jsonObject.values.forEach((e, i) => {
-      console.log(densities, e.first_char.letter);
-      e.first_char.densities.left_space =
         densities[e.first_char.letter].left_space;
       e.first_char.densities.right_space =
         densities[e.first_char.letter].right_space;
