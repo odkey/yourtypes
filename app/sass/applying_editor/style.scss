@@ -4,29 +4,26 @@
 @import "../common/_variables";
 @import "../common/_rules";
 
-section.designed-text {
+section.designed {
   margin: 80px auto 80px 40px;
   display: block;
   text-align: left;
-  div.designed-text.default {
-    min-height: 100px;
-  }
-  div.designed-text.strict {
-    min-height: 100px;
-  }
-  div.designed-text.normal {
-    min-height: 100px;
-  }
-  div.designed-text.lite {
-    min-height: 100px;
-  }
+  // div.designed-text.default {
+  //   min-height: 100px;
+  // }
+  // div.designed-text.strict {
+  //   min-height: 100px;
+  // }
+  // div.designed-text.normal {
+  //   min-height: 100px;
+  // }
+  // div.designed-text.lite {
+  //   min-height: 100px;
+  // }
   div {
-
     &.designed-text-field {
-      div.designed-text-field-chars {
-        span {
-          font-size: inherit;
-        }
+      span.designed-text-field-chars {
+        display: inline-block;
       }
     }
   }

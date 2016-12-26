@@ -294,6 +294,7 @@ class Training {
             char: element.textContent
           };
           this.images.push(object);
+          console.log(object.img.width, object.img.height);
           runningCount++;
           if (runningCount == array.length) {
             this.isImagesStoring = false;
@@ -324,11 +325,12 @@ class Training {
         const imageData =
           context.getImageData(0, 0, image.width, image.height);
         const pixels = imageData.data;
+        // console.log('i: '+pixels);
         const width = imageData.width;
         const height = imageData.height;
-        const area = width * height;
-        const halfArea = area / 2.0;
-        const quarterArea = area / 4.0;
+        const area = width * height /6*5;
+        const halfArea = area / 2;
+        const quarterArea = halfArea / 2;
         let sumBlack = 0;
         let sumBlackLeft = 0;
         let sumBlackRight = 0;
@@ -374,31 +376,24 @@ class Training {
           }
         }
         let promises = new Array();
-        let leftSpaceValidation = new Array(height)
-        let rightSpaceValidation = new Array(height)
+        let leftSpaceValidation = new Array(height);
+        let rightSpaceValidation = new Array(height);
         for (var i = 0; i < height; i++) {
-          leftSpaceValidation[i] = true
-          rightSpaceValidation[i] = true
+          leftSpaceValidation[i] = true;
+          rightSpaceValidation[i] = true;
         }
         pixels.forEach((element, index) => {
+          if (index < width*height*4/6 || width*height*4/6*5 <= index) { return; }
           if (index%4 != 3) { return; }
-          const i = parseFloat(parseInt(index/4));
-          const x = parseInt(i%parseFloat(width));
-          const y = parseInt(i/parseFloat(width));
+          const i = parseInt(index/4);
+          const x = parseInt(i%width);
+          const y = parseInt(i/parseFloat(width) + height/6);
           if (x < width/2) {
             if (y < height/2) {
               promises.push(sum_up(element, index, 'left-top'));
             }
             else {
               promises.push(sum_up(element, index, 'left-bottom'));
-            }
-            if (leftSpaceValidation[y]) {
-              if (element == 0) {
-                promises.push(sum_up(element, index, 'left-space'));
-              }
-              else if (element != 0){
-                leftSpaceValidation[y] = false;
-              }
             }
           }
           else if (x >= width/2) {
@@ -408,16 +403,30 @@ class Training {
             else {
               promises.push(sum_up(element, index, 'right-bottom'));
             }
-            if (rightSpaceValidation[y]) {
-              if (element == 0) {
-                promises.push(sum_up(element, index, 'right-space'));
-              }
-              else {
-                rightSpaceValidation[y] = false;
-              }
-            }
           }
         });
+        for (var i = parseInt(pixels.length/6); i < parseInt(pixels.length/6*5); i++) {
+          if (i%4 != 3) { continue; }
+          let _i = parseInt(i/4);
+          if (_i%width <= width/2) {
+            if (leftSpaceValidation[parseInt(_i/width)] && (pixels[i] != 0 || _i%width == width/2)) {
+              leftSpaceValidation[parseInt(_i/width)] = false;
+              sumWhiteLeftSpace += _i%width;
+              // console.log(i, _i, parseInt(_i/width), _i%width, sumWhiteLeftSpace);
+            }
+          }
+        }
+        for (var i = parseInt(pixels.length/6*5); i >= parseInt(pixels.length/6); i--) {
+          if (i%4 != 3) { continue; }
+          let _i = parseInt(i/4);
+          if (_i%width >= width/2) {
+            if (rightSpaceValidation[parseInt(_i/width)] && (pixels[i] != 0 || _i%width == width/2)) {
+              rightSpaceValidation[parseInt(_i/width)] = false;
+              sumWhiteRightSpace += width - _i%width;
+              console.log("-",i, _i, parseInt(_i/width), _i%width, sumWhiteRightSpace);
+            }
+          }
+        }
         promises.push(() => {
           const letter = element.char;
           const leftTopDensity = sumBlackLeftTop / quarterArea;
@@ -437,8 +446,8 @@ class Training {
           this.densities[letter]['left'] = leftDensity;
           this.densities[letter]['right'] = rightDensity;
           this.densities[letter]['all'] = density;
-          this.densities[letter]['left_space'] = sumWhiteLeftSpace;
-          this.densities[letter]['right_space'] = sumWhiteRightSpace
+          this.densities[letter]['left_space'] = leftSpace;
+          this.densities[letter]['right_space'] = rightSpace;
           this.runningCount++;
           if (this.runningCount == this.images.length) {
             this.isDataAnalysed = true;

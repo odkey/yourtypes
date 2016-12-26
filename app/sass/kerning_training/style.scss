@@ -18,6 +18,9 @@ section.kerning-training {
     &.kerning-training-field {
       display: block;
       margin-bottom: 80px;
+      span {
+        display: inline-block;
+      }
     }
   }
 }

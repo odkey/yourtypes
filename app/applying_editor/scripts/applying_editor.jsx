@@ -504,6 +504,7 @@ class ApplyingEditor {
     });
     let interval = setInterval(() => {
       if (searchCount == this.sampledData.length) {
+        // console.log(nearest.index, nearest.squaredDistance);
         console.log('Applied: Lite');
         clearInterval(interval);
         element.style.letterSpacing =
@@ -540,6 +541,7 @@ class ApplyingEditor {
     });
     let interval = setInterval(() => {
       if (searchCount == this.sampledData.length) {
+        // console.log(nearest.index, nearest.squaredDistance);
         console.log('Applied: Normal');
         clearInterval(interval);
         element.style.letterSpacing =
@@ -589,6 +591,7 @@ class ApplyingEditor {
     });
     let interval = setInterval(() => {
       if (searchCount == this.sampledData.length) {
+        // console.log(nearest.index, nearest.squaredDistance);
         console.log('Applied: Strict');
         clearInterval(interval);
         element.style.letterSpacing =
@@ -601,19 +604,19 @@ class ApplyingEditor {
     this.applyingCountBottomHalf = 0;
     let nearest = { squaredDistance: 1000, index: -1 };
     let firstDensity =
-      parseFloat(this.densities[array[index].textContent].right_bottom/2.0) +
-        parseFloat(this.densities[array[index].textContent].left_bottom/2.0);
+      parseFloat(this.densities[array[index].textContent].right_bottom +
+        this.densities[array[index].textContent].left_bottom)/2.0;
     let secondDensity =
-      parseFloat(this.densities[array[index+1].textContent].left_bottom/2.0) +
-        parseFloat(this.densities[array[index+1].textContent].right_bottom/2.0);
+      parseFloat(this.densities[array[index+1].textContent].left_bottom +
+        this.densities[array[index+1].textContent].right_bottom)/2.0;
     let searchCount = 0;
     this.sampledData.forEach((element, index, array) => {
       let sampleFirstDenstiy =
-        parseFloat(element.first_char.densities.left_bottom/2.0) +
-          parseFloat(element.first_char.densities.right_bottom/2.0);
+        parseFloat(element.first_char.densities.left_bottom +
+          element.first_char.densities.right_bottom)/2.0;
       let sampleSecondDensity =
-        parseFloat(element.second_char.densities.left_bottom/2.0) +
-          parseFloat(element.second_char.densities.left_bottom/2.0);
+        parseFloat(element.second_char.densities.left_bottom +
+          element.second_char.densities.left_bottom)/2.0;
       let diffFirst = firstDensity - sampleFirstDenstiy;
       let diffSecond = secondDensity - sampleSecondDensity;
       let squaredDistance = diffFirst * diffFirst + diffSecond * diffSecond;
@@ -631,6 +634,7 @@ class ApplyingEditor {
     });
     let interval = setInterval(() => {
       if (searchCount == this.sampledData.length) {
+        // console.log(nearest.index, nearest.squaredDistance);
         console.log('Applied: Bottom half');
         clearInterval(interval);
         element.style.letterSpacing =
@@ -641,19 +645,21 @@ class ApplyingEditor {
   }
   applyLetterSpacesSideSpace(element, index, array) {
     this.applyingLetterSpacesSideSpace = 0;
-    let nearest = { squaredDistance: 100000, index: -1 };
+    let nearest = { squaredDistance: 100000000, index: -1 };
     let firstSideSpace =
       parseFloat(this.densities[array[index].textContent].right_space);
     let secondSideSpace =
-      parseFloat(this.densities[array[index].textContent].left_space);
-      let searchCount = 0;
+      parseFloat(this.densities[array[index+1].textContent].left_space);
+    let searchCount = 0;
+    console.log(array[index].textContent, array[index+1].textContent, firstSideSpace, secondSideSpace);
+    console.log(this.sampledData);
     this.sampledData.forEach((element, index, array) => {
       let sampleFirstSideSpace =
         parseFloat(element.first_char.densities.right_space);
       let sampleSecondSideSpace =
         parseFloat(element.second_char.densities.left_space);
       let diffFirst = firstSideSpace - sampleFirstSideSpace;
-      let diffSecond = sampleSecondSideSpace - sampleSecondSideSpace;
+      let diffSecond = secondSideSpace - sampleSecondSideSpace;
       let squaredDistance = diffFirst * diffFirst + diffSecond * diffSecond;
       if (this.analyseMode == 'except-origin') {
         if (squaredDistance > 0 && squaredDistance < nearest.squaredDistance) {
@@ -661,7 +667,10 @@ class ApplyingEditor {
         }
       }
       else {
-        if (squaredDistance < nearest.squaredDistance) {
+        if (index == 0) {
+          nearest = { index: 0, squaredDistance: squaredDistance };
+        }
+        else if (squaredDistance < nearest.squaredDistance) {
           nearest = { index: index, squaredDistance: squaredDistance };
         }
       }
@@ -669,9 +678,10 @@ class ApplyingEditor {
     });
     let interval = setInterval(() => {
       if (searchCount == this.sampledData.length) {
+        // console.log(nearest.index, nearest.squaredDistance);
         console.log('Applied: Side space');
         clearInterval(interval);
-        console.log(nearest.index, this.sampledData[nearest.index]);
+        // console.log(nearest.index, nearest.squaredDistance, his.sampledData[nearest.index]);
         element.style.letterSpacing =
           `${ this.sampledData[nearest.index].letter_space.em }em`;
         this.applyingCountSideSpace++;
@@ -698,12 +708,12 @@ class ApplyingEditor {
         const imageData =
           context.getImageData(0, 0, image.width, image.height);
         const pixels = imageData.data;
+        // console.log('i: '+pixels);
         const width = imageData.width;
         const height = imageData.height;
-        const area = width * height;
-        const halfArea = area / 2.0;
-        const quarterArea = area / 4.0;
-        let sumBlack = 0;
+        const area = width * height /6*5;
+        const halfArea = area / 2;
+        const quarterArea = halfArea / 2;
         let sumBlackLeft = 0;
         let sumBlackRight = 0;
         let sumBlackLeftTop = 0;
@@ -747,7 +757,6 @@ class ApplyingEditor {
             });
           }
         }
-        let density = 0;
         let promises = new Array();
         let leftSpaceValidation = new Array(height);
         let rightSpaceValidation = new Array(height);
@@ -756,24 +765,17 @@ class ApplyingEditor {
           rightSpaceValidation[i] = true;
         }
         pixels.forEach((element, index) => {
+          if (index < width*height*4/6 || width*height*4/6*5 <= index) { return; }
           if (index%4 != 3) { return; }
-          const i = parseFloat(parseInt(index/4));
-          const x = parseInt(i%parseFloat(width));
-          const y = parseInt(i/parseFloat(width));
+          const i = parseInt(index/4);
+          const x = parseInt(i%width);
+          const y = parseInt(i/parseFloat(width) + height/6);
           if (x < width/2) {
             if (y < height/2) {
               promises.push(sum_up(element, index, 'left-top'));
             }
             else {
               promises.push(sum_up(element, index, 'left-bottom'));
-            }
-            if (leftSpaceValidation[y]) {
-              if (element == 0) {
-                promises.push(sum_up(element, index, 'left-space'));
-              }
-              else if (element != 0) {
-                leftSpaceValidation[y] = false;
-              }
             }
           }
           else if (x >= width/2) {
@@ -783,16 +785,75 @@ class ApplyingEditor {
             else {
               promises.push(sum_up(element, index, 'right-bottom'));
             }
-            if (rightSpaceValidation[y]) {
-              if (element == 0) {
-                promises.push(sum_up(element, index, 'right-space'));
-              }
-              else {
-                rightSpaceValidation[y] = false;
-              }
-            }
           }
         });
+        for (var i = parseInt(pixels.length/6); i < parseInt(pixels.length/6*5); i++) {
+          if (i%4 != 3) { continue; }
+          let _i = parseInt(i/4);
+          if (_i%width <= width/2) {
+            if (leftSpaceValidation[parseInt(_i/width)] && (pixels[i] != 0 || _i%width == width/2)) {
+              leftSpaceValidation[parseInt(_i/width)] = false;
+              sumWhiteLeftSpace += _i%width;
+              // console.log(i, _i, parseInt(_i/width), _i%width, sumWhiteLeftSpace);
+            }
+          }
+        }
+        for (var i = parseInt(pixels.length/6*5); i >= parseInt(pixels.length/6); i--) {
+          if (i%4 != 3) { continue; }
+          let _i = parseInt(i/4);
+          if (_i%width >= width/2) {
+            if (rightSpaceValidation[parseInt(_i/width)] && (pixels[i] != 0 || _i%width == width/2)) {
+              rightSpaceValidation[parseInt(_i/width)] = false;
+              sumWhiteRightSpace += width - _i%width;
+              console.log("-",i, _i, parseInt(_i/width), _i%width, sumWhiteRightSpace);
+            }
+          }
+        }
+
+        // pixels.forEach((element, index) => {
+        //   if (index < width*height || width*height*3 <= index) { return; }
+        //   if (index%4 != 3) { return; }
+        //   const i = parseFloat(parseInt(index/4));
+        //   const x = parseInt(i%parseFloat(width));
+        //   const y = parseInt(i/parseFloat(width));
+        //   if (x < width/2) {
+        //     if (y + height*0.25 < height/2) {
+        //       promises.push(sum_up(element, index, 'left-top'));
+        //     }
+        //     else {
+        //       promises.push(sum_up(element, index, 'left-bottom'));
+        //     }
+        //   }
+        //   else if (x >= width/2) {
+        //     if (y + height*0.25 < height/2) {
+        //       promises.push(sum_up(element, index, 'right-top'));
+        //     }
+        //     else {
+        //       promises.push(sum_up(element, index, 'right-bottom'));
+        //     }
+        //   }
+        // });
+        // for (var i = 0; i < pixels.length; i++) {
+        //   if (i%width < width/2 && leftSpaceValidation[parseInt(i/width)]) {
+        //     if (pixels[i] == 0) {
+        //       promises.push(sum_up(element, index, 'left-space'));
+        //     }
+        //     else if (pixels[i] != 0) {
+        //       leftSpaceValidation[parseInt(i/width)] = false;
+        //     }
+        //   }
+        // }
+        // for (var i = pixels.length-1; i >= 0; i--) {
+        //
+        //   if (i%width <= width/2 && rightSpaceValidation[parseInt(i/width)]) {
+        //     if (pixels[i] == 0) {
+        //       promises.push(sum_up(element, index, 'right-space'));
+        //     }
+        //     else if (pixels[i] != 0) {
+        //       rightSpaceValidation[parseInt(i/width)] = false;
+        //     }
+        //   }
+        // }
         promises.push(() => {
           const letter = element.char;
           const leftTopDensity = sumBlackLeftTop / quarterArea;
@@ -847,6 +908,7 @@ class ApplyingEditor {
                 img: image,
                 char: element.textContent
               };
+              console.log(object.img.width, object.img.height);
               this.images.push(object);
               runningCount++;
               resolve();

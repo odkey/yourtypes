@@ -1,6 +1,7 @@
 body {
   user-select: none;
   cursor: default;
+  -webkit-font-smoothing: none;
 }
 
 &.loading-curtain {

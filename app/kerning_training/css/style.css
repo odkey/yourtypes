@@ -3,7 +3,8 @@ body {
      -moz-user-select: none;
       -ms-user-select: none;
           user-select: none;
-  cursor: default; }
+  cursor: default;
+  -webkit-font-smoothing: none; }
 
 .loading-curtain {
   display: inline-block;
@@ -29,3 +30,5 @@ section.kerning-training {
     section.kerning-training div.kerning-training-field {
       display: block;
       margin-bottom: 80px; }
+      section.kerning-training div.kerning-training-field span {
+        display: inline-block; }
