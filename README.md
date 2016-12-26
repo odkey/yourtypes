@@ -12,7 +12,7 @@
 
 ## Developing
 ### Gulp environment
-- To watch Sass files, you have to run ```$ gulp watch``` at root dir.
+- To watch and transpile Sass files, you have to run ```$ gulp watch``` at root dir.
 
 ### Run app
 - At app directory, ```$ electron .```
