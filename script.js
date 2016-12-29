@@ -8,9 +8,11 @@ $(document).ready(() => {
 });
 
 function addSideSpaceDataTo(inputJson) {
-  $.getJSON('densities.json', (densities) => {
+  $.getJSON('densities-hiragino-w3.json', (densities) => {
     let jsonObject = inputJson;
+    // console.log(jsonObject);
     jsonObject.values.forEach((e, i) => {
+      // console.log(densities[e.first_char.letter], densities[e.first_char.letter].left_top);
       e.first_char.densities.left_top =
         densities[e.first_char.letter].left_top;
       e.first_char.densities.right_top =
